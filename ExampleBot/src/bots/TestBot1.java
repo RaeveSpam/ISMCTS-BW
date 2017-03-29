@@ -1,9 +1,14 @@
+package bots;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import bwapi.*;
 import bwta.BWTA;
 import bwta.BaseLocation;
+
+import managers.*;
 
 public class TestBot1 extends DefaultBWListener {
 
@@ -13,8 +18,12 @@ public class TestBot1 extends DefaultBWListener {
     private Player self;
 
     private int scoutID;
-    private int projectedSupply = 0;
     private boolean scouted = false;
+    private List<Manager> managers;
+    
+    public TestBot1(){
+    	managers = new ArrayList<Manager>();
+    }
     
     public void run() {
         mirror.getModule().setEventListener(this);
@@ -24,6 +33,9 @@ public class TestBot1 extends DefaultBWListener {
     @Override
     public void onUnitCreate(Unit unit) {
         System.out.println("New unit discovered " + unit.getType());
+        for(Manager man : managers){
+        	man.onUnitCreate(unit);
+        }
     }
 
     @Override
@@ -31,8 +43,15 @@ public class TestBot1 extends DefaultBWListener {
         game = mirror.getGame();
         self = game.self();
         game.setLocalSpeed(20);
+        managers.add(new SupplyManager(game));
+        managers.add(new BaseManager(game));
+        System.out.println(managers.size() + " managers");
+        for(Manager man : managers){
+        	man.onStart();
+        }
         //Use BWTA to analyze map
         //This may take a few minutes if the map is processed first time!
+        
         System.out.println("Analyzing map...");
         BWTA.readMap();
         BWTA.analyze();
@@ -46,67 +65,31 @@ public class TestBot1 extends DefaultBWListener {
         	}
         	System.out.println();
         }
-
     }
 
     @Override
     public void onFrame() {
-    	//System.out.println("proj " + projectedSupply);
+    	//System.out.println("onFrame");
         //game.setTextSize(10);
+    	//System.out.println("---- Run " + managers.size() + " Managers ----");
+        for(Manager man : managers){
+        	man.onFrame();
+        }
         game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
 
         StringBuilder units = new StringBuilder("My units:\n");
-        
-        manageSupply();
         if(self.minerals() > 400){
         	expand();
         }
         //iterate through my units
         for (Unit myUnit : self.getUnits()) {
             units.append(myUnit.getType()).append(" ").append(myUnit.getTilePosition()).append("\n");
-
-            
-            //if there's enough minerals, train an SCV
-            if (myUnit.getType() == UnitType.Protoss_Nexus && self.minerals() >= 50) {
-                buildWorkers(myUnit);
-            }
-
-            //if it's a worker and it's idle, send it to the closest mineral patch
-            if (myUnit.getType().isWorker() && myUnit.isIdle()) {
-            	if(!scouted){
-            		System.out.println("SCOUT");
-                	scout(myUnit);
-                	scouted = true;
-                } else {
-                	assignIdleWorker(myUnit);
-                }
-        	}
         }
-
+        
         //draw my units on screen
         game.drawTextScreen(10, 25, units.toString());
     }
 
-    // Send worker to closest vacant mineral patch or refinery
-public void assignIdleWorker(Unit worker){
-	Unit closestMineral = null;
-	
-    //find the closest mineral
-    for (Unit neutralUnit : game.neutral().getUnits()) {
-        if (neutralUnit.getType().isMineralField()) {
-            if (closestMineral == null || worker.getDistance(neutralUnit) < worker.getDistance(closestMineral)) {
-                closestMineral = neutralUnit;
-            }
-        }
-    }
-
-    //if a mineral patch was found, send the worker to gather it
-    if (closestMineral != null) {
-        worker.gather(closestMineral, false);
-    }
-	//TODO send to nearest mineral
-	//TODO max 3? workers on each mineral
-}
 
 public void harvestGas(Unit refinery){
 	Unit[] closestWorkers = new Unit[3];
@@ -130,60 +113,18 @@ public void harvestGas(Unit refinery){
 	}
 }
 
-public void buildWorkers(Unit nexus){
-	if(nexus.getTrainingQueue().size() < 2 && self.supplyUsed() < self.supplyTotal()){
-		nexus.train(UnitType.Protoss_Probe);
-	}
-		
-	// Add workers to queues in bases (not really possible to iterate through bases)
-	// No more than 2 workers in each queue
-	// TODO: Max number of workers??
-	//			iterate base location, mineral/gas count x3 = max workers?
-	
-	
-}
 
-public void manageSupply(){		
 
-	System.out.println(self.supplyUsed() + "/" + self.supplyTotal() + " - " + projectedSupply);
-	//if we're running out of supply and have enough minerals ...
-    if (projectedSupply <= self.supplyTotal() && projectedSupply <= self.supplyUsed() && 
-    		(self.supplyTotal() - self.supplyUsed() <= 4 + self.supplyTotal()/10) && (self.minerals() >= 100)) {
-    	//iterate over units to find a worker
-    	projectedSupply += 16;
-    	for (Unit myUnit : self.getUnits()) {
-    		if (myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID) {
-    			//get a nice place to build a supply depot
-    			TilePosition buildTile =
-    				getBuildTile(myUnit, UnitType.Protoss_Pylon, self.getStartLocation());
-    			//and, if found, send the worker to build it (and leave others alone - break;)
-    			if (buildTile != null) {
-    				if(!myUnit.build(UnitType.Protoss_Pylon, buildTile)){
-    					projectedSupply -=16;
-    				}
-    				break;
-    			}
-    		}
-    	}
+public void onUnitComplete(Unit unit){
+	for(Manager man : managers){
+    	man.onUnitComplete(unit);
     }
 }
 
-public void onUnitComplete(Unit unit){
-	if(unit.getType() == UnitType.Protoss_Nexus){
-		projectedSupply += 18;
-	}
-}
-
 public void onUnitDestroy(Unit unit){
-	if(unit.getType() == UnitType.Protoss_Pylon){
-		projectedSupply -= 16;
-		System.out.println("Pylon Destroyed");
-	} else if(unit.getType() == UnitType.Protoss_Nexus){
-		if(unit.canBuild()){
-			projectedSupply -= 18;
-		}
-		System.out.println("Nexus Destroyed");
-	}
+	for(Manager man : managers){
+    	man.onUnitDestroy(unit);
+    }
 }
 
 public void expand(){
