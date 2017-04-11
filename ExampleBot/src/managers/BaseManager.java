@@ -51,7 +51,9 @@ public class BaseManager implements Manager {
 
 	@Override
 	public void onUnitComplete(Unit unit) {
-		// TODO Auto-generated method stub
+		if(unit.getType() == UnitType.Protoss_Assimilator){
+			harvestGas(unit);
+		}
 
 	}
 
@@ -65,6 +67,28 @@ public class BaseManager implements Manager {
 	public void onUnitDestroy(Unit unit) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	private void harvestGas(Unit refinery){
+		Unit[] closestWorkers = new Unit[3];
+		closestWorkers[0] = null;
+		closestWorkers[1] = null;
+		closestWorkers[2] = null;
+		for(Unit u : self.getUnits()){
+			if(u.getType() == UnitType.Protoss_Probe){
+				int dist = u.getDistance(refinery); 
+				if(closestWorkers[0] == null || dist < closestWorkers[0].getDistance(refinery)) {
+					closestWorkers[2] = closestWorkers[1];
+					closestWorkers[1] = closestWorkers[0];
+					closestWorkers[0] = u;
+				} else if(dist < closestWorkers[1].getDistance(refinery)){
+					closestWorkers[2] = closestWorkers[1];
+					closestWorkers[1] = u;
+				} else if(closestWorkers[2] == null || dist < closestWorkers[2].getDistance(refinery)){
+					closestWorkers[2] = u;
+				}
+			}
+		}
 	}
 	
 	private void manageBase(Unit nexus){
@@ -113,6 +137,12 @@ public class BaseManager implements Manager {
 	    }
 		//TODO send to nearest mineral
 		//TODO max 3? workers on each mineral
+	}
+
+	@Override
+	public void onUnitDiscover(Unit unit) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

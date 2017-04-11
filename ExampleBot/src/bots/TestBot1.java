@@ -90,31 +90,6 @@ public class TestBot1 extends DefaultBWListener {
         game.drawTextScreen(10, 25, units.toString());
     }
 
-
-public void harvestGas(Unit refinery){
-	Unit[] closestWorkers = new Unit[3];
-	closestWorkers[0] = null;
-	closestWorkers[1] = null;
-	closestWorkers[2] = null;
-	for(Unit u : self.getUnits()){
-		if(u.getType() == UnitType.Protoss_Probe){
-			int dist = u.getDistance(refinery); 
-			if(closestWorkers[0] == null || dist < closestWorkers[0].getDistance(refinery)) {
-				closestWorkers[2] = closestWorkers[1];
-				closestWorkers[1] = closestWorkers[0];
-				closestWorkers[0] = u;
-			} else if(dist < closestWorkers[1].getDistance(refinery)){
-				closestWorkers[2] = closestWorkers[1];
-				closestWorkers[1] = u;
-			} else if(closestWorkers[2] == null || dist < closestWorkers[2].getDistance(refinery)){
-				closestWorkers[2] = u;
-			}
-		}
-	}
-}
-
-
-
 public void onUnitComplete(Unit unit){
 	for(Manager man : managers){
     	man.onUnitComplete(unit);
@@ -160,7 +135,7 @@ public void expand(){
 	// Find new base location
 	// Build new base (in the right place)
 }
-
+/*
 public void scout(Unit scout){
 	
 	scoutID = scout.getID();
@@ -172,13 +147,9 @@ public void scout(Unit scout){
 		scout.move(bases[i].getTilePosition().toPosition(), true);
 	}
 	System.out.println("Scout " + bases.length + " bases");
-}
+}*/
     
-public Comparator<BaseLocation> BaseComparator = new Comparator<BaseLocation>() {
-	public int compare(BaseLocation first, BaseLocation second){
-		return (int)(first.getTilePosition().getDistance(self.getStartLocation()) - second.getTilePosition().getDistance(self.getStartLocation())+0.5);
-	}
-};
+
  // Returns a suitable TilePosition to build a given building type near
  // specified TilePosition aroundTile, or null if not found. (builder parameter is our worker)
  public TilePosition getBuildTile(Unit builder, UnitType buildingType, TilePosition aroundTile) {

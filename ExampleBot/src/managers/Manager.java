@@ -14,4 +14,6 @@ public interface Manager {
 	
 	public void onUnitDestroy(Unit unit);
 	
+	public void onUnitDiscover(Unit unit);
+	
 }

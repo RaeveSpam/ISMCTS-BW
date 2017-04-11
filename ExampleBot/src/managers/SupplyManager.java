@@ -76,4 +76,12 @@ public class SupplyManager implements Manager {
 	    }
 	}
 
+
+
+	@Override
+	public void onUnitDiscover(Unit unit) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
