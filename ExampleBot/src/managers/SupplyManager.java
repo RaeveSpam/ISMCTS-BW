@@ -53,8 +53,8 @@ public class SupplyManager implements Manager {
 	}
 	
 	public void manageSupply(){		
-		int k = projectedSupply/10; // variable allowing building pylons just before hitting the supply limit
-		System.out.println(self.supplyUsed() + "/" + self.supplyTotal() + " - " + projectedSupply);
+		int k = projectedSupply/2; // variable allowing building pylons just before hitting the supply limit
+		//System.out.println(self.supplyUsed() + "/" + self.supplyTotal() + " - " + projectedSupply);
 		//if we're running out of supply and have enough minerals ...
 	    if (self.supplyUsed() > projectedSupply - k && self.minerals() > 100) {
 	    	//iterate over units to find a free worker
@@ -62,6 +62,7 @@ public class SupplyManager implements Manager {
 	    	for (Unit myUnit : self.getUnits()) {
 	    		if (myUnit.getType() == UnitType.Protoss_Probe && myUnit.getOrder() == Order.MoveToMinerals) {
 	    			//get a nice place to build a pylon
+	    			System.out.println("build pylon");
 	    			TilePosition buildTile =
 	    				builder.getBuildTile(myUnit, UnitType.Protoss_Pylon, myUnit.getTilePosition());
 	    			//and, if found, send the worker to build it (and leave others alone - break;)

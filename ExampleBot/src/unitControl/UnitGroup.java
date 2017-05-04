@@ -25,6 +25,19 @@ public class UnitGroup extends Group {
 		
 	}
 	
+	@Override
+	public void addUnit(Unit unit){
+		if(!isFull()){
+			
+			units.add(unit);
+			//unit.attack(lastOrder);
+		}
+	}
+	
+	public boolean isFull(){
+		return units.size() > 11;
+	}
+	
 	public double getSpeed(){
 		return unitType.topSpeed();
 	}
@@ -37,8 +50,8 @@ public class UnitGroup extends Group {
 	 * Removes and returns one unit from the group
 	 * @return ID of a unit now removed from the group
 	 */
-	public int pop(){
-		return units.remove((units.size()-1));
+	public Unit pop(){
+		return units.remove(units.size()-1);
 	}
 
 

@@ -20,6 +20,9 @@ public class TestBot1 extends DefaultBWListener {
     private int scoutID;
     private boolean scouted = false;
     private List<Manager> managers;
+    private int bases;
+    private int gateways;
+    private List<Unit> gw;
     
     public TestBot1(){
     	managers = new ArrayList<Manager>();
@@ -40,11 +43,15 @@ public class TestBot1 extends DefaultBWListener {
 
     @Override
     public void onStart() {
+    	gw = new ArrayList<Unit>();
+    	bases = 1;
+    	gateways = 0;
         game = mirror.getGame();
         self = game.self();
         game.setLocalSpeed(20);
         managers.add(new SupplyManager(game));
         managers.add(new BaseManager(game));
+        managers.add(new ArmyManager(game));
         System.out.println(managers.size() + " managers");
         for(Manager man : managers){
         	man.onStart();
@@ -65,6 +72,8 @@ public class TestBot1 extends DefaultBWListener {
         	}
         	System.out.println();
         }
+        
+        
     }
 
     @Override
@@ -72,12 +81,61 @@ public class TestBot1 extends DefaultBWListener {
     	//System.out.println("onFrame");
         //game.setTextSize(10);
     	//System.out.println("---- Run " + managers.size() + " Managers ----");
-        for(Manager man : managers){
+
+    	for(Manager man : managers){
         	man.onFrame();
         }
+    	System.out.println("Managers Done");
+
+    	if(!scouted){
+    		
+    		for(Unit u : self.getUnits()){
+            	if(u.getType() == UnitType.Protoss_Probe){
+            		
+            		scoutID = u.getID();
+            		scout(u);
+            		scouted = true;
+            		System.out.println("SCOUT");
+            		break;
+            	}
+            }
+    	}
         game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
 
         StringBuilder units = new StringBuilder("My units:\n");
+        
+        if(self.minerals() > 100){
+        	System.out.println(gw.size());
+        	for(Unit g : gw){
+        		if(g.exists()){
+        			System.out.println("ZEALOT");
+        			if(g.getTrainingQueue().size() < 2){
+        				System.out.println("train " + g.train(UnitType.Protoss_Zealot));
+        			}
+        		} else {
+        			gw.remove(g);
+        		}
+    		}
+        	
+        	/**for(Unit gate : self.getUnits()){
+        		if(gate.getType() == UnitType.Protoss_Gateway && gate.getTrainingQueue().size() < 2){
+        			gate.train(UnitType.Protoss_Zealot);
+        		}
+        	}*/
+        }
+
+
+        if(self.minerals() > 150 && gateways < 2 && self.supplyUsed() > 20){
+        	for(Unit myUnit : self.getUnits()){
+        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
+        			if(buildGateway(myUnit)){
+        				//gateways++;
+        			}
+        			break;
+        		}
+        	}
+        } 
+
         if(self.minerals() > 400){
         	expand();
         }
@@ -85,7 +143,7 @@ public class TestBot1 extends DefaultBWListener {
         for (Unit myUnit : self.getUnits()) {
             units.append(myUnit.getType()).append(" ").append(myUnit.getTilePosition()).append("\n");
         }
-        
+
         //draw my units on screen
         game.drawTextScreen(10, 25, units.toString());
     }
@@ -94,12 +152,48 @@ public void onUnitComplete(Unit unit){
 	for(Manager man : managers){
     	man.onUnitComplete(unit);
     }
+	if(unit.getPlayer() == self && unit.getType() == UnitType.Protoss_Gateway){
+		gw.add(unit);
+	}
 }
 
 public void onUnitDestroy(Unit unit){
 	for(Manager man : managers){
     	man.onUnitDestroy(unit);
     }
+}
+
+public void onUnitDiscover(Unit unit){
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Gateway){
+		gateways++;
+	}
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Nexus){
+		gateways = 0;
+	}
+	for(Manager man : managers){
+		man.onUnitDiscover(unit);
+	}
+}
+
+public boolean buildGateway(Unit builder){
+	
+	Builder b = new Builder(game);
+	TilePosition buildTile = null;
+	
+	for(Unit p : self.getUnits()){
+		if(p.getType() == UnitType.Protoss_Pylon){
+			buildTile = b.getBuildTile(builder, UnitType.Protoss_Gateway, p.getTilePosition());
+			if(buildTile != null){
+				break;
+			}
+		}
+	}
+	
+	if(buildTile != null) {
+		builder.build(UnitType.Protoss_Gateway, buildTile);
+		return true;
+	}
+	return false;
 }
 
 public void expand(){
@@ -135,19 +229,19 @@ public void expand(){
 	// Find new base location
 	// Build new base (in the right place)
 }
-/*
+
 public void scout(Unit scout){
 	
 	scoutID = scout.getID();
 	BaseLocation[] bases = new BaseLocation[BWTA.getBaseLocations().size()];
 	BWTA.getBaseLocations().toArray(bases);
-	Arrays.sort(bases, BaseComparator);
+	//Arrays.sort(bases, BaseComparator);
 	scout.move(bases[0].getTilePosition().toPosition());
 	for(int i = 1; i < bases.length; i++){
 		scout.move(bases[i].getTilePosition().toPosition(), true);
 	}
 	System.out.println("Scout " + bases.length + " bases");
-}*/
+}
     
 
  // Returns a suitable TilePosition to build a given building type near
@@ -207,4 +301,11 @@ public void scout(Unit scout){
     public static void main(String[] args) {
         new TestBot1().run();
     }
+    
+    public Comparator<BaseLocation> BaseComparator = new Comparator<BaseLocation>() {
+		//Player self = game.self();
+		public int compare(BaseLocation first, BaseLocation second){
+			return (int)(first.getTilePosition().getDistance(self.getStartLocation()) - second.getTilePosition().getDistance(self.getStartLocation())+0.5);
+		}
+	};
 }

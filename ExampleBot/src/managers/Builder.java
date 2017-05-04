@@ -12,7 +12,7 @@ public class Builder {
 	
 	public TilePosition getBuildTile(Unit builder, UnitType buildingType, TilePosition aroundTile) {
 	 	TilePosition ret = null;
-	 	int maxDist = 3;
+	 	int maxDist = 1;
 	 	int stopDist = 40;
 
 	 	// Refinery, Assimilator, Extractor
@@ -55,7 +55,7 @@ public class Builder {
 	 				}
 	 			}
 	 		}
-	 		maxDist += 2;
+	 		maxDist += 1;
 	 	}
 
 	 	if (ret == null) game.printf("Unable to find suitable build position for "+buildingType.toString());

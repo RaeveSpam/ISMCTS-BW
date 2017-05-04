@@ -9,49 +9,50 @@ import bwapi.Unit;
 
 public abstract class Group {
 
-	Game game;
-	List<Integer> units;
+	protected Game game;
+	protected List<Unit> units;
+	protected Position lastOrder;
 	
 	public Group(Game game){
 		this.game = game;
-		units = new ArrayList<Integer>();
+		units = new ArrayList<Unit>();
 	}
 	
 	public void moveOrder(Position target){
-		for(Integer i : units)
+		//lastOrder = target;
+		for(Unit i : units)
 		{
-			game.getUnit(units.get(i)).move(target);
+			i.move(target);
 		}	
 	}
 	
 	public void attackMoveOrder(Position target){
-		for(Integer i : units)
+		lastOrder = target;
+		for(Unit i : units)
 		{
-			game.getUnit(units.get(i)).attack(target);
+			i.attack(target);
 		}	
 	}
 	
 	public void attackOrder(Unit unit){
-		for(Integer i : units){
-			game.getUnit(units.get(i)).attack(unit);
+		lastOrder = unit.getPosition();
+		for(Unit i : units){
+			i.attack(unit);
 		}
 	}
 	
 	public void holdPositionOrder(){
-		for(Integer i : units){
-			game.getUnit(units.get(i)).holdPosition();
+		for(Unit i : units){
+			i.holdPosition();
 		}		
 	}
 	
 	public void addUnit(Unit unit){
-		units.add(unit.getID());
+		units.add(unit);
 	}
 	
 	public void removeUnit(Unit unit){
-		if(units.contains(unit.getID()))
-		{
-			units.remove(unit.getID());
-		}
+		units.remove(unit);
 	}
 	
 	public int size(){

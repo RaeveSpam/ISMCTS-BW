@@ -51,8 +51,14 @@ public class BaseManager implements Manager {
 
 	@Override
 	public void onUnitComplete(Unit unit) {
+		if(unit.getPlayer() != game.self()){
+			return;
+		}
 		if(unit.getType() == UnitType.Protoss_Assimilator){
 			harvestGas(unit);
+		}
+		if(unit.getType() == UnitType.Protoss_Nexus){
+			bases.add(unit);
 		}
 
 	}
@@ -141,7 +147,7 @@ public class BaseManager implements Manager {
 
 	@Override
 	public void onUnitDiscover(Unit unit) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	

@@ -1,24 +1,36 @@
 package unitControl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import bwapi.Game;
 import bwapi.Player;
 import bwapi.Position;
 import bwapi.Unit;
+import bwapi.UnitType;
 import bwta.BWTA;
 import bwta.BaseLocation;
+import bwta.Region;
 
 public class ScoutGroup extends Group {
 
 	private List<BaseLocation> enemyBases;
 	private BaseLocation enemyMain;
+	private Set<Region> enemyRegions;
+	private List<Unit> enemyBuildings;
+	private Set<UnitType> enemyUnits;
 	
 	public ScoutGroup(Game game){
 		super(game);
 		enemyMain = null;
+		enemyBases = new ArrayList<BaseLocation>();
+		enemyRegions = new HashSet<Region>();
+		enemyBuildings = new ArrayList<Unit>();
+		enemyUnits = new HashSet<UnitType>(); //????
 	}
 
 	@Override
@@ -47,6 +59,10 @@ public class ScoutGroup extends Group {
 		// send scout to enemy main/bases
 	}
 	
+	public Set<Region> getEnemyRegions(){
+		return enemyRegions;
+	}
+	
 	public List<BaseLocation> getEnemyBases(){
 		return enemyBases;
 	}
@@ -56,8 +72,19 @@ public class ScoutGroup extends Group {
 	}
 	
 	public void onUnitDiscover(Unit unit) {
+		
 		// enemy army?
-		// enemy bases
+		if(!unit.getPlayer().equals(game.self())){
+			if(unit.getType().isBuilding()){
+				if(unit.getType().isResourceDepot()){
+					enemyRegions.add(BWTA.getRegion(unit.getPosition()));
+				}
+				enemyBuildings.add(unit);
+			}
+		}
+		if(unit.getType().isResourceDepot() && !unit.getPlayer().equals(game.self())){
+			
+		}
 	}
 	
 	private Unit getScout(){
@@ -79,8 +106,8 @@ public class ScoutGroup extends Group {
 	@Override
 	public int getSupply() {
 		int result = 0;
-		for(int u : units){
-			result += game.getUnit(u).getType().supplyRequired();
+		for(Unit u : units){
+			result += u.getType().supplyRequired();
 		}
 		return result;
 	}
