@@ -16,11 +16,14 @@ public class BaseManager implements Manager {
 	private Game game;
 	private Player self;
 	private List<Unit> bases;
+	private ResourceManager bank;
+	private int count = 0;
 	
-	public BaseManager(Game game){
+	public BaseManager(Game game, ResourceManager resMan){
 		this.game = game;
 		self = game.self();
 		bases = new ArrayList<Unit>();
+		bank = resMan;
 	}
 	
 	@Override
@@ -35,18 +38,29 @@ public class BaseManager implements Manager {
 
 	@Override
 	public void onFrame() {
-		// Find and assign idle workers
-		List<Unit> units = self.getUnits();
-		//System.out.println(units.size() + " units found");
-		for(Unit myUnit : units){
-			if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.isIdle()){
-				assignIdleWorker(myUnit);
+		if(count > 59){
+			// Find and assign idle workers
+			List<Unit> units = self.getUnits();
+			//System.out.println(units.size() + " units found");
+			for(Unit myUnit : units){
+				if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getOrder() != Order.CreateProtossBuilding 
+						&& myUnit.getOrder() != Order.Move
+						&& myUnit.isIdle()
+						){
+					//System.out.println(myUnit.getOrder());
+					//&& myUnit.getOrder() != Order.CreateProtossBuilding && myUnit.getOrder() != Order.Move
+					assignIdleWorker(myUnit);
+				} else if(myUnit.getType() == UnitType.Protoss_Nexus){
+					manageBase(myUnit);
+				}
 			}
+			count = 0;
 		}
+		count++;
 		// Manage bases
-		for(Unit base : bases){
+		/*for(Unit base : bases){
 			manageBase(base);
-		}
+		}*/
 	}
 
 	@Override
@@ -55,6 +69,7 @@ public class BaseManager implements Manager {
 			return;
 		}
 		if(unit.getType() == UnitType.Protoss_Assimilator){
+			//System.out.println("HARVEST");
 			harvestGas(unit);
 		}
 		if(unit.getType() == UnitType.Protoss_Nexus){
@@ -81,7 +96,7 @@ public class BaseManager implements Manager {
 		closestWorkers[1] = null;
 		closestWorkers[2] = null;
 		for(Unit u : self.getUnits()){
-			if(u.getType() == UnitType.Protoss_Probe){
+			if(u.getType() == UnitType.Protoss_Probe && u.getOrder() == Order.MoveToMinerals || u.getOrder() == Order.ReturnMinerals){
 				int dist = u.getDistance(refinery); 
 				if(closestWorkers[0] == null || dist < closestWorkers[0].getDistance(refinery)) {
 					closestWorkers[2] = closestWorkers[1];
@@ -95,6 +110,12 @@ public class BaseManager implements Manager {
 				}
 			}
 		}
+		for(int i = 0; i < closestWorkers.length; i++){
+			if(closestWorkers[i] != null){
+				//System.out.println("GO GAS");
+				closestWorkers[i].gather(refinery);
+			}
+		}
 	}
 	
 	private void manageBase(Unit nexus){
@@ -102,26 +123,48 @@ public class BaseManager implements Manager {
 			return;
 		}
 		// Count workers & available resources
-		List<Unit> units = nexus.getUnitsInRadius(160);
+		List<Unit> units = nexus.getUnitsInRadius(200);
 		int workers = 0;
 		int resources = 0;
 		for(Unit u : units){
+			//System.out.print(u.getType() + ", ");
 			if(u.getType() == UnitType.Protoss_Probe){
 				workers++;
 			} else if(u.getType().isMineralField() ||
 					u.getType() == UnitType.Protoss_Assimilator){
 				resources++;
+			} else if(u.getType() == UnitType.Resource_Vespene_Geyser){
+				//System.out.print("Geyser found ");
+				if(game.self().supplyUsed() > 30 && bank.build(UnitType.Protoss_Assimilator)){
+					//System.out.print(" - Supply and bank ");
+					Builder builder = new Builder(game);
+					for(Unit b : nexus.getUnitsInRadius(160)){
+						if(b.getOrder() == Order.MoveToMinerals){
+							//System.out.print(" - Found worker ");
+							//TilePosition buildTile = builder.getBuildTile(b, UnitType.Protoss_Assimilator, u.getTilePosition());
+							//if (buildTile != null) {
+								//System.out.print(" - BuildTile found ");
+			    					b.build(UnitType.Protoss_Assimilator, u.getTilePosition());
+			    					
+							//}
+		    				break;
+		    			}
+					}
+				}
 			}
 		}
+		//System.out.println("");
+	
 		// Train more workers if base is not full
 		//System.out.println(workers + " < " + resources*3);
 		if(workers < resources*3){
 			buildWorkers(nexus);
 		}
+		
 	}
 	
 	private void buildWorkers(Unit nexus){
-		if(nexus.getTrainingQueue().size() < 2 && self.supplyUsed() < self.supplyTotal()){
+		if(nexus.getTrainingQueue().size() < 1 && bank.build(UnitType.Protoss_Probe)){
 			nexus.train(UnitType.Protoss_Probe);
 		}		
 	}
@@ -147,8 +190,8 @@ public class BaseManager implements Manager {
 
 	@Override
 	public void onUnitDiscover(Unit unit) {
-		
-		
+	
 	}
+	
 	
 }

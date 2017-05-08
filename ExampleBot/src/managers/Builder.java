@@ -5,25 +5,32 @@ import bwapi.*;
 public class Builder {
 	
 	private Game game;
+	private int stopDist;
 	
 	public Builder(Game game){
 		this.game = game;
+		stopDist = 40;
+	}
+	
+	public Builder(Game game, int dist){
+		this.game = game;
+		stopDist = dist;
 	}
 	
 	public TilePosition getBuildTile(Unit builder, UnitType buildingType, TilePosition aroundTile) {
 	 	TilePosition ret = null;
 	 	int maxDist = 1;
-	 	int stopDist = 40;
+	 	//int stopDist = 10;
 
 	 	// Refinery, Assimilator, Extractor
-	 	if (buildingType.isRefinery()) {
+	 	/*if (buildingType.isRefinery()) {
 	 		for (Unit n : game.neutral().getUnits()) {
 	 			if ((n.getType() == UnitType.Resource_Vespene_Geyser) &&
 	 					( Math.abs(n.getTilePosition().getX() - aroundTile.getX()) < stopDist ) &&
 	 					( Math.abs(n.getTilePosition().getY() - aroundTile.getY()) < stopDist )
 	 					) return n.getTilePosition();
 	 		}
-	 	}
+	 	}*/
 
 	 	while ((maxDist < stopDist) && (ret == null)) {
 	 		for (int i=aroundTile.getX()-maxDist; i<=aroundTile.getX()+maxDist; i++) {

@@ -41,7 +41,7 @@ public class DefenceHelper {
 	}
 	
 	public List<UnitGroup> update(){
-		
+		//System.out.println("defender.update()");
 		List<UnitGroup> groups = new ArrayList<UnitGroup>();
 		for(EnemyAttack a : attacks){
 			if(!a.update()) {
@@ -54,9 +54,8 @@ public class DefenceHelper {
 	}
 	
 	public List<EnemyAttack> getAttacks(){
-		
+		//System.out.println("defender.getAttacks()");
 		update();
-		
 		return attacks;
 	}
 	

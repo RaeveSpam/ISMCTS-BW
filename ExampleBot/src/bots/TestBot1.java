@@ -23,9 +23,14 @@ public class TestBot1 extends DefaultBWListener {
     private int bases;
     private int gateways;
     private List<Unit> gw;
+    private ResourceManager bank;
+    private int count;
+    private boolean core;
     
     public TestBot1(){
     	managers = new ArrayList<Manager>();
+    	count = 0;
+    	core = false;
     }
     
     public void run() {
@@ -35,7 +40,7 @@ public class TestBot1 extends DefaultBWListener {
 
     @Override
     public void onUnitCreate(Unit unit) {
-        System.out.println("New unit discovered " + unit.getType());
+        //System.out.println("New unit discovered " + unit.getType());
         for(Manager man : managers){
         	man.onUnitCreate(unit);
         }
@@ -49,8 +54,9 @@ public class TestBot1 extends DefaultBWListener {
         game = mirror.getGame();
         self = game.self();
         game.setLocalSpeed(20);
-        managers.add(new SupplyManager(game));
-        managers.add(new BaseManager(game));
+        bank = new ResourceManager(game);
+        managers.add(new SupplyManager(game, bank));
+        managers.add(new BaseManager(game, bank));
         managers.add(new ArmyManager(game));
         System.out.println(managers.size() + " managers");
         for(Manager man : managers){
@@ -66,11 +72,11 @@ public class TestBot1 extends DefaultBWListener {
         
         int i = 0;
         for(BaseLocation baseLocation : BWTA.getBaseLocations()){
-        	System.out.println("Base location #" + (++i) + ". Printing location's region polygon:");
+        	//System.out.println("Base location #" + (++i) + ". Printing location's region polygon:");
         	for(Position position : baseLocation.getRegion().getPolygon().getPoints()){
-        		System.out.print(position + ", ");
+        		//System.out.print(position + ", ");
         	}
-        	System.out.println();
+        	//System.out.println();
         }
         
         
@@ -81,11 +87,16 @@ public class TestBot1 extends DefaultBWListener {
     	//System.out.println("onFrame");
         //game.setTextSize(10);
     	//System.out.println("---- Run " + managers.size() + " Managers ----");
-
+    	if(count > 20000){
+    		scouted = false;
+    		count = 0;
+    	}
+    	count++;
+    	bank.onFrame();
     	for(Manager man : managers){
         	man.onFrame();
         }
-    	System.out.println("Managers Done");
+    	//System.out.println("Managers Done");
 
     	if(!scouted){
     		
@@ -100,32 +111,27 @@ public class TestBot1 extends DefaultBWListener {
             	}
             }
     	}
-        game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
+        //game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
 
-        StringBuilder units = new StringBuilder("My units:\n");
+        //StringBuilder units = new StringBuilder("My units:\n");
+    	//System.out.println(self.minerals() + " > 100");
         
-        if(self.minerals() > 100){
-        	System.out.println(gw.size());
-        	for(Unit g : gw){
-        		if(g.exists()){
-        			System.out.println("ZEALOT");
-        			if(g.getTrainingQueue().size() < 2){
-        				System.out.println("train " + g.train(UnitType.Protoss_Zealot));
-        			}
-        		} else {
-        			gw.remove(g);
-        		}
+        	//System.out.println(gw.size());
+    	boolean gway = false;
+    	for(Unit g : self.getUnits()){
+    		if(g.getType() == UnitType.Protoss_Gateway){
+    			gway = true;
+	    		if(g.canTrain() && g.getTrainingQueue().size() < 1){
+    				if(bank.build(UnitType.Protoss_Dragoon)){
+    					g.train(UnitType.Protoss_Dragoon);
+    				} else if (bank.build(UnitType.Protoss_Zealot)){
+        				g.train(UnitType.Protoss_Zealot);
+    				}
+    			}
     		}
-        	
-        	/**for(Unit gate : self.getUnits()){
-        		if(gate.getType() == UnitType.Protoss_Gateway && gate.getTrainingQueue().size() < 2){
-        			gate.train(UnitType.Protoss_Zealot);
-        		}
-        	}*/
-        }
-
-
-        if(self.minerals() > 150 && gateways < 2 && self.supplyUsed() > 20){
+		}
+    	
+        if(gateways < 2 && self.supplyUsed() > 20 && bank.build(UnitType.Protoss_Gateway)){
         	for(Unit myUnit : self.getUnits()){
         		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
         			if(buildGateway(myUnit)){
@@ -135,17 +141,29 @@ public class TestBot1 extends DefaultBWListener {
         		}
         	}
         } 
-
-        if(self.minerals() > 400){
+        if(!core && gway){
+        	
+        	for(Unit myUnit : self.getUnits()){
+        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
+        			if(bank.build(UnitType.Protoss_Cybernetics_Core)){
+        				System.out.println("CORE");
+        				buildCore(myUnit);
+        			}
+        			break;
+        		}
+        	}
+        }
+        //System.out.println(self.minerals() + " > 400");
+        if(bank.build(UnitType.Protoss_Nexus)){
         	expand();
         }
         //iterate through my units
-        for (Unit myUnit : self.getUnits()) {
+        /*for (Unit myUnit : self.getUnits()) {
             units.append(myUnit.getType()).append(" ").append(myUnit.getTilePosition()).append("\n");
-        }
+        }*/
 
         //draw my units on screen
-        game.drawTextScreen(10, 25, units.toString());
+        //game.drawTextScreen(10, 25, units.toString());
     }
 
 public void onUnitComplete(Unit unit){
@@ -161,14 +179,21 @@ public void onUnitDestroy(Unit unit){
 	for(Manager man : managers){
     	man.onUnitDestroy(unit);
     }
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Cybernetics_Core){
+		core = false;
+	}
 }
 
 public void onUnitDiscover(Unit unit){
+	bank.onUnitDiscover(unit);
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Gateway){
 		gateways++;
 	}
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Nexus){
 		gateways = 0;
+	}
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Cybernetics_Core){
+		core = true;
 	}
 	for(Manager man : managers){
 		man.onUnitDiscover(unit);
@@ -177,7 +202,7 @@ public void onUnitDiscover(Unit unit){
 
 public boolean buildGateway(Unit builder){
 	
-	Builder b = new Builder(game);
+	Builder b = new Builder(game, 10);
 	TilePosition buildTile = null;
 	
 	for(Unit p : self.getUnits()){
@@ -188,15 +213,36 @@ public boolean buildGateway(Unit builder){
 			}
 		}
 	}
-	
 	if(buildTile != null) {
 		builder.build(UnitType.Protoss_Gateway, buildTile);
 		return true;
 	}
 	return false;
 }
+	
+public boolean buildCore(Unit builder){
+		
+		Builder b = new Builder(game, 10);
+		TilePosition buildTile = null;
+		
+		for(Unit p : self.getUnits()){
+			if(p.getType() == UnitType.Protoss_Pylon){
+				buildTile = b.getBuildTile(builder, UnitType.Protoss_Cybernetics_Core, p.getTilePosition());
+				if(buildTile != null){
+					break;
+				}
+			}
+		}
+	
+	if(buildTile != null) {
+		builder.build(UnitType.Protoss_Cybernetics_Core, buildTile);
+		return true;
+	}
+	return false;
+}
 
 public void expand(){
+	System.out.println("EXPAND");
 	// Find probe to build new expansion
 	Unit probe = null;
 	for(Unit myUnit : self.getUnits()){
@@ -235,12 +281,12 @@ public void scout(Unit scout){
 	scoutID = scout.getID();
 	BaseLocation[] bases = new BaseLocation[BWTA.getBaseLocations().size()];
 	BWTA.getBaseLocations().toArray(bases);
-	//Arrays.sort(bases, BaseComparator);
+	Arrays.sort(bases, BaseComparator);
 	scout.move(bases[0].getTilePosition().toPosition());
 	for(int i = 1; i < bases.length; i++){
 		scout.move(bases[i].getTilePosition().toPosition(), true);
 	}
-	System.out.println("Scout " + bases.length + " bases");
+	//System.out.println("Scout " + bases.length + " bases");
 }
     
 

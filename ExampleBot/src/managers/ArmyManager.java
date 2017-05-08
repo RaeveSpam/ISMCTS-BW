@@ -2,11 +2,14 @@ package managers;
 
 import bwapi.Unit;
 import bwapi.UnitType;
+import bwapi.Unitset;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.sun.xml.internal.bind.v2.model.runtime.RuntimeArrayInfo;
 
 import bwapi.Game;
 import bwapi.Position;
@@ -15,6 +18,7 @@ import bwta.Region;
 import unitControl.*;
 import bwta.BWTA;
 import bwta.BaseLocation;
+import bwta.Chokepoint;
 
 public class ArmyManager implements Manager {
 
@@ -31,6 +35,7 @@ public class ArmyManager implements Manager {
 	private List<Region> enemyRegions;
 	private DefenceHelper defender;
 	private EnemyAttack enemyAttack;
+	private int count;
 	
 	public ArmyManager(Game game){
 		this.game = game;
@@ -41,10 +46,12 @@ public class ArmyManager implements Manager {
 		enemyRegions = new ArrayList<Region>();
 		ownedRegions = new ArrayList<Region>();
 		stagingArea = null;
+
 		
 		idleUnits = new ArrayList<UnitGroup>();
 		activeUnits = new ArrayList<UnitGroup>();
 		enemyAttack = null;
+		count = 0;
 	}
 	
 	@Override
@@ -55,47 +62,59 @@ public class ArmyManager implements Manager {
 
 	}
 
-	@Override
-	public void onFrame() {
-		// TODO Auto-generated method stub
+	public void attackMoveAll(Position target){
 		
-		// defence
-		if(enemyAttack == null){
-			// no previous attack, detect attack
-			EnemyAttack newAttack = detectAttack();
-			if(newAttack != null){
-				enemyAttack = newAttack;
-			}
-		} else {
-			System.out.println("XXXXX UNDER ATTACK XXXXX");
-			if(!enemyAttack.update() || !ownedRegions.contains(enemyAttack.getRegion())){
-				// existing attack has been resolved
-				for(UnitGroup g : enemyAttack.getDefenders()){
-					idleUnits.add(g);
-					activeUnits.remove(g);
-				}
-				enemyAttack = null;
-			} else {
-				// defend
-				for(UnitGroup g : idleUnits){
-					// assign idle units to the defence
-					enemyAttack.addDefenders(g);
-				}
-				for(UnitGroup g : enemyAttack.getDefenders()){
-					// engage the defenders
-					g.attackMoveOrder(enemyAttack.getPosition());
-				}
+		List<Unit> units = game.self().getUnits();
+		for(int i = count%4; i < units.size(); i+=4){
+			Unit unit = units.get(i);
+			if(	!unit.getType().isBuilding() &&
+				!unit.getType().isWorker()){
+				unit.attack(target);
 			}
 			
 		}
-		System.out.println(idleUnits.size() + " idle groups");
-		//System.out.println(stagingArea.toString());
-		System.out.println(stagingArea);
-		for(UnitGroup g : idleUnits){
-			// idle units move to the staging area
-			g.moveOrder(stagingArea);
+	}
+	
+	@Override
+	public void onFrame() {
+		// TODO Auto-generated method stub
+		if(count % 15 == 0){
+			ownedRegions = new ArrayList<Region>();
+			for(Unit u : game.self().getUnits()){
+				if(u.getType() == UnitType.Protoss_Nexus){
+					ownedRegions.add(BWTA.getRegion(u.getPosition()));
+				}
+			}
+			// defence
+			if(enemyAttack == null){
+				// no previous attack, detect attack
+				EnemyAttack newAttack = detectAttack();
+				if(newAttack != null){
+					//System.out.println("No Attack");
+					enemyAttack = newAttack;
+				}
+				attackMoveAll(stagingArea);
+			} else {
+				System.out.println("XXXXX UNDER ATTACK XXXXX");
+				if(!isThreat(enemyAttack)){
+					// existing attack has been resolved
+					enemyAttack = null;
+				} else {
+					// defend
+					if(enemyAttack.getPosition() != null) {
+						
+						attackMoveAll(enemyAttack.getPosition());
+					}
+
+				}
+				
+			}
+			if(count > 90){
+				count = 0;
+			}
 		}
-		System.out.println("Army done");
+		count++;
+		//System.out.println("Army done");
 		
 	
 	}
@@ -104,19 +123,46 @@ public class ArmyManager implements Manager {
 	 * Return null if no relevant attack is found.
 	 */
 	public EnemyAttack detectAttack(){
-		
+		//System.out.println("Detect attacks");
 		List<EnemyAttack> attacks = defender.getAttacks();
-		System.out.println(attacks.size() + " Attacks");
+		//System.out.println(attacks.size() + " attacks");
 		EnemyAttack result = null;
 		int size = 0;
 		for(EnemyAttack a : attacks){
-			if(ownedRegions.contains(a.getRegion()) && size < a.getSupply()){
+			if(isThreat(a) && size < a.getSupply()){
 				result = a;
 				size = a.getSupply();
 			}
 		}
 		
 		return result;
+	}
+	
+	public boolean isThreat(EnemyAttack attack){
+		if(!attack.update()){
+			//System.out.println("isThreat1");
+			return false;
+		}
+		
+		for(Chokepoint chp : attack.getRegion().getChokepoints()){				
+			for(Region r : ownedRegions){
+				/*System.out.println(chp.getRegions().first.getCenter().getX() + " == " + r.getCenter().getX() + " && " +
+						chp.getRegions().first.getCenter().getY() + " == " + r.getCenter().getY());
+				System.out.println(chp.getRegions().second.getCenter().getX() + " == " + r.getCenter().getX() + " && " +
+						chp.getRegions().second.getCenter().getY() + " == " + r.getCenter().getY());*/
+				if(chp.getRegions().first.getCenter().getX() == r.getCenter().getX() && 
+					chp.getRegions().first.getCenter().getY() == r.getCenter().getY()){
+					return true;
+				}
+				if(chp.getRegions().second.getCenter().getX() == r.getCenter().getX() && 
+					chp.getRegions().second.getCenter().getY() == r.getCenter().getY()){
+					return true;
+				}
+			}
+
+		}
+		//System.out.println("isThreat2");
+		return false;
 	}
 	
 	public void attack(){
@@ -154,9 +200,31 @@ public class ArmyManager implements Manager {
 				shortestDistance = rDistance;
 			}
 		}
-		stagingArea = closestRegion.getCenter();
+		for(Chokepoint chp : closestRegion.getChokepoints()){
+			if(!ownedRegions.contains(chp.getRegions().first) || !ownedRegions.contains(chp.getRegions().second)){
+				System.out.println("new staging area");
+				int x = closestRegion.getCenter().getX() + (chp.getCenter().getX() - closestRegion.getCenter().getX())/2;
+				int y = closestRegion.getCenter().getY() + (chp.getCenter().getY() - closestRegion.getCenter().getY())/2;
+				stagingArea = new Position(x, y);
+			}
+		}
+		//stagingArea = closestRegion.getCenter();
 	
 				
+	}
+	
+	public void setStagingRegion(Region reg){
+		
+		for(Chokepoint chp : reg.getChokepoints()){
+			if(!ownedRegions.contains(chp.getRegions().first) || !ownedRegions.contains(chp.getRegions().second)){
+				System.out.println("new staging area");
+				int x = (chp.getCenter().getX() + reg.getCenter().getX())/2;
+				int y = (chp.getCenter().getY() + reg.getCenter().getY())/2;
+				stagingArea = new Position(x, y);
+				return;
+			}
+		}
+		stagingArea = reg.getCenter();
 	}
 	
 	public void setStagingArea(Position pos){
@@ -218,10 +286,10 @@ public class ArmyManager implements Manager {
 	
 	public void onUnitCreate(Unit unit) {
 		if(unit.getType() == UnitType.Protoss_Nexus && unit.getPlayer() == game.self()){
-			System.out.println("update");
-			stagingArea = BWTA.getRegion(unit.getPosition()).getCenter();
+			//System.out.println("update");
+			setStagingRegion(BWTA.getRegion(unit.getPosition()));
 			//updateStagingArea();
-			System.out.println("update 2");
+			//System.out.println("update 2");
 		}	
 	}
 

@@ -1,6 +1,7 @@
 package unitControl;
 
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class EnemyAttack {
 	
 	public EnemyAttack(Region target){
 		this.target = target;
+		defenders = new ArrayList<UnitGroup>();
 		units = new HashSet<Unit>();
 	}
 	
@@ -47,28 +49,46 @@ public class EnemyAttack {
 	
 	
 	public Position getPosition(){
+		//System.out.println("attack.getPosition()");
 		int x = 0;
 		int y = 0;
 		for(Unit u : units){
-			x += u.getPosition().getX();
-			y += u.getPosition().getY();
+			if(!u.isVisible()){
+				units.remove(u);
+			} else {
+				x += u.getPosition().getX();
+				y += u.getPosition().getY();
+			}
+		}
+		if(units.size() == 0){
+			return null;
 		}
 		x = x/units.size();
 		y = y/units.size();
+		//System.out.println("Attack.position(" + x + ", " + y +")");
 		return new Position(x, y);
 	}
 	
 	public boolean update(){
+		//System.out.println("attack.update()");
 		for(Unit u : units){
-			if(!u.exists()){
+			//System.out.print("....");
+			//System.out.println(u);
+			if(u == null){
 				units.remove(u);
 			}
 		}
 		if(units.size() == 0){
+			//System.out.println("Attack gone");
 			return false;
 		}
-		target = BWTA.getRegion(getPosition());
-		return true;
+		Position p = getPosition();
+		if(p != null){
+			target = BWTA.getRegion(p);
+			return true;
+		}
+		return false;
+		
 	}
 	
 	public List<UnitGroup> getDefenders(){
