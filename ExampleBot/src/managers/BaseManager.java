@@ -45,6 +45,8 @@ public class BaseManager implements Manager {
 			for(Unit myUnit : units){
 				if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getOrder() != Order.CreateProtossBuilding 
 						&& myUnit.getOrder() != Order.Move
+						&& myUnit.getOrder() != Order.HarvestGas
+						&& myUnit.getOrder() != Order.MoveToGas
 						&& myUnit.isIdle()
 						){
 					//System.out.println(myUnit.getOrder());

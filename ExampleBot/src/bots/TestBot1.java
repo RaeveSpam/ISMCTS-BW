@@ -1,5 +1,6 @@
 package bots;
 import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +19,7 @@ public class TestBot1 extends DefaultBWListener {
     private Player self;
 
     private int scoutID;
-    private boolean scouted = false;
+    private boolean scouted;
     private List<Manager> managers;
     private int bases;
     private int gateways;
@@ -26,11 +27,11 @@ public class TestBot1 extends DefaultBWListener {
     private ResourceManager bank;
     private int count;
     private boolean core;
+    private boolean robot;
+    private boolean obs;
     
     public TestBot1(){
-    	managers = new ArrayList<Manager>();
-    	count = 0;
-    	core = false;
+    	
     }
     
     public void run() {
@@ -48,6 +49,12 @@ public class TestBot1 extends DefaultBWListener {
 
     @Override
     public void onStart() {
+    	managers = new ArrayList<Manager>();
+    	count = 0;
+    	core = false;
+    	robot = false;
+    	obs = false;
+    	scouted = false;
     	gw = new ArrayList<Unit>();
     	bases = 1;
     	gateways = 0;
@@ -141,13 +148,47 @@ public class TestBot1 extends DefaultBWListener {
         		}
         	}
         } 
+        if(obs && bank.build(UnitType.Protoss_Observer)){
+        	for(Unit myUnit : self.getUnits()){
+        		if(myUnit.getType() == UnitType.Protoss_Robotics_Facility && myUnit.getTrainingQueue().size() < 1){
+        			myUnit.train(UnitType.Protoss_Observer);
+        			break;
+        		}
+        	}
+        }
         if(!core && gway){
         	
         	for(Unit myUnit : self.getUnits()){
         		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
         			if(bank.build(UnitType.Protoss_Cybernetics_Core)){
         				System.out.println("CORE");
-        				buildCore(myUnit);
+        				buildBuilding(myUnit, UnitType.Protoss_Cybernetics_Core);
+        			}
+        			break;
+        		}
+        	}
+        }
+        
+        if(!robot && core){
+        	
+        	for(Unit myUnit : self.getUnits()){
+        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
+        			if(bank.build(UnitType.Protoss_Robotics_Facility)){
+        				System.out.println("robot!");
+        				buildBuilding(myUnit, UnitType.Protoss_Robotics_Facility);
+        			}
+        			break;
+        		}
+        	}
+        }
+        
+        if(robot && !obs){
+        	
+        	for(Unit myUnit : self.getUnits()){
+        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
+        			if(bank.build(UnitType.Protoss_Observatory)){
+        				System.out.println("obs!");
+        				buildBuilding(myUnit, UnitType.Protoss_Observatory);
         			}
         			break;
         		}
@@ -181,6 +222,12 @@ public void onUnitDestroy(Unit unit){
     }
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Cybernetics_Core){
 		core = false;
+	} else
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Robotics_Facility){
+		robot = true;
+	} else
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Observatory){
+		obs = true;
 	}
 }
 
@@ -188,12 +235,18 @@ public void onUnitDiscover(Unit unit){
 	bank.onUnitDiscover(unit);
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Gateway){
 		gateways++;
-	}
+	} else
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Nexus){
 		gateways = 0;
-	}
+	} else
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Cybernetics_Core){
 		core = true;
+	} else
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Robotics_Facility){
+		robot = true;
+	} else
+	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Observatory){
+		obs = true;
 	}
 	for(Manager man : managers){
 		man.onUnitDiscover(unit);
@@ -220,6 +273,27 @@ public boolean buildGateway(Unit builder){
 	return false;
 }
 	
+public boolean buildBuilding(Unit builder, UnitType type){
+	
+	Builder b = new Builder(game, 10);
+	TilePosition buildTile = null;
+	
+	for(Unit p : self.getUnits()){
+		if(p.getType() == UnitType.Protoss_Pylon){
+			buildTile = b.getBuildTile(builder, type, p.getTilePosition());
+			if(buildTile != null){
+				break;
+			}
+		}
+	}
+
+if(buildTile != null) {
+	builder.build(type, buildTile);
+	return true;
+}
+return false;
+}
+
 public boolean buildCore(Unit builder){
 		
 		Builder b = new Builder(game, 10);

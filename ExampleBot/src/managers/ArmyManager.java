@@ -70,7 +70,11 @@ public class ArmyManager implements Manager {
 			if(	!unit.getType().isBuilding() &&
 				!unit.getType().isWorker()){
 				unit.attack(target);
-			}
+				if(unit.getType() == UnitType.Protoss_Observer){
+					unit.move(target);
+				}
+			} 
+			
 			
 		}
 	}
