@@ -31,11 +31,13 @@ public class ArmyManager implements Manager {
 	private ScoutGroup scout;
 	private boolean isAttacking;
 	private Position stagingArea;
+	private Region targetRegion;
 	private List<Region> ownedRegions;
 	private List<Region> enemyRegions;
 	private DefenceHelper defender;
 	private EnemyAttack enemyAttack;
 	private int count;
+	private Position oldStagingArea;
 	
 	public ArmyManager(Game game){
 		this.game = game;
@@ -62,6 +64,10 @@ public class ArmyManager implements Manager {
 
 	}
 
+	public boolean isAttacking(){
+		return isAttacking;
+	}
+	
 	public void attackMoveAll(Position target){
 		
 		List<Unit> units = game.self().getUnits();
@@ -99,14 +105,14 @@ public class ArmyManager implements Manager {
 				}
 				attackMoveAll(stagingArea);
 			} else {
-				System.out.println("XXXXX UNDER ATTACK XXXXX");
+				//System.out.println("XXXXX UNDER ATTACK XXXXX");
 				if(!isThreat(enemyAttack)){
 					// existing attack has been resolved
 					enemyAttack = null;
 				} else {
 					// defend
 					if(enemyAttack.getPosition() != null) {
-						
+						enemyAttack.print();
 						attackMoveAll(enemyAttack.getPosition());
 					}
 
@@ -144,10 +150,21 @@ public class ArmyManager implements Manager {
 	
 	public boolean isThreat(EnemyAttack attack){
 		if(!attack.update()){
-			//System.out.println("isThreat1");
 			return false;
 		}
 		
+		if(isAttacking){
+			for(Chokepoint chp : attack.getRegion().getChokepoints()){
+				if(chp.getRegions().first.getCenter().getX() == targetRegion.getCenter().getX() && 
+						chp.getRegions().first.getCenter().getY() == targetRegion.getCenter().getY()){
+						return true;
+				}
+				if(chp.getRegions().second.getCenter().getX() == targetRegion.getCenter().getX() && 
+					chp.getRegions().second.getCenter().getY() == targetRegion.getCenter().getY()){
+					return true;
+				}
+			}
+		}
 		for(Chokepoint chp : attack.getRegion().getChokepoints()){				
 			for(Region r : ownedRegions){
 				/*System.out.println(chp.getRegions().first.getCenter().getX() + " == " + r.getCenter().getX() + " && " +
@@ -169,12 +186,25 @@ public class ArmyManager implements Manager {
 		return false;
 	}
 	
-	public void attack(){
+	public void attack(Region reg){
+		isAttacking = true;
+		oldStagingArea = stagingArea;
+		stagingArea = reg.getCenter();
+		targetRegion = reg;
 		
-		// Select attacking units
-		// select target for attack
-		// Attack move
-		
+
+	}
+	
+	public void attack(BaseLocation base){
+		isAttacking = true;
+		oldStagingArea = stagingArea;
+		stagingArea = base.getPosition();
+		targetRegion = BWTA.getRegion(stagingArea);
+	}
+	
+	public void withDraw(){
+		isAttacking = false;
+		stagingArea = oldStagingArea;
 	}
 	
 	/**
@@ -218,17 +248,25 @@ public class ArmyManager implements Manager {
 	}
 	
 	public void setStagingRegion(Region reg){
-		
 		for(Chokepoint chp : reg.getChokepoints()){
 			if(!ownedRegions.contains(chp.getRegions().first) || !ownedRegions.contains(chp.getRegions().second)){
-				System.out.println("new staging area");
+				//System.out.println("new staging area");
 				int x = (chp.getCenter().getX() + reg.getCenter().getX())/2;
 				int y = (chp.getCenter().getY() + reg.getCenter().getY())/2;
-				stagingArea = new Position(x, y);
-				return;
+				if(isAttacking){
+					oldStagingArea = new Position(x, y);
+					return;
+				} else {
+					stagingArea = new Position(x, y);
+					return;
+				}
 			}
 		}
-		stagingArea = reg.getCenter();
+		if(isAttacking){
+			oldStagingArea = reg.getCenter();
+		} else {
+			stagingArea = reg.getCenter();
+		}
 	}
 	
 	public void setStagingArea(Position pos){
@@ -291,6 +329,7 @@ public class ArmyManager implements Manager {
 	public void onUnitCreate(Unit unit) {
 		if(unit.getType() == UnitType.Protoss_Nexus && unit.getPlayer() == game.self()){
 			//System.out.println("update");
+			
 			setStagingRegion(BWTA.getRegion(unit.getPosition()));
 			//updateStagingArea();
 			//System.out.println("update 2");

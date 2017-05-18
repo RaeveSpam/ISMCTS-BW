@@ -66,7 +66,7 @@ public class DefenceHelper {
 	}
 	
 	public void onUnitDiscover(Unit unit){
-		if(unit.getPlayer() == game.enemy() && !unit.getType().isBuilding() && unit.getType().canAttack()){
+		if(unit.getPlayer() == game.enemy()){
 			addEnemyUnit(unit);
 		}
 	}

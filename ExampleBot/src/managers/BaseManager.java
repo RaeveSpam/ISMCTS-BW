@@ -43,14 +43,10 @@ public class BaseManager implements Manager {
 			List<Unit> units = self.getUnits();
 			//System.out.println(units.size() + " units found");
 			for(Unit myUnit : units){
-				if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getOrder() != Order.CreateProtossBuilding 
-						&& myUnit.getOrder() != Order.Move
-						&& myUnit.getOrder() != Order.HarvestGas
-						&& myUnit.getOrder() != Order.MoveToGas
-						&& myUnit.isIdle()
-						){
-					//System.out.println(myUnit.getOrder());
-					//&& myUnit.getOrder() != Order.CreateProtossBuilding && myUnit.getOrder() != Order.Move
+				if(myUnit.getType() == UnitType.Protoss_Probe && ( 	
+						myUnit.getOrder() == Order.None || 
+						myUnit.getOrder() == Order.Nothing ||
+						myUnit.getOrder() == Order.PlayerGuard)){
 					assignIdleWorker(myUnit);
 				} else if(myUnit.getType() == UnitType.Protoss_Nexus){
 					manageBase(myUnit);
@@ -93,6 +89,14 @@ public class BaseManager implements Manager {
 	}
 	
 	private void harvestGas(Unit refinery){
+		int i = 0;
+		for(Unit u : self.getUnits()){
+			if(i < 3 && u.getType() == UnitType.Protoss_Probe && (u.getOrder() == Order.MoveToMinerals || u.getOrder() == Order.ReturnMinerals)){
+				i++;
+				u.gather(refinery);
+			}
+		}
+		/*
 		Unit[] closestWorkers = new Unit[3];
 		closestWorkers[0] = null;
 		closestWorkers[1] = null;
@@ -117,7 +121,7 @@ public class BaseManager implements Manager {
 				//System.out.println("GO GAS");
 				closestWorkers[i].gather(refinery);
 			}
-		}
+		}*/
 	}
 	
 	private void manageBase(Unit nexus){
@@ -135,6 +139,11 @@ public class BaseManager implements Manager {
 			} else if(u.getType().isMineralField() ||
 					u.getType() == UnitType.Protoss_Assimilator){
 				resources++;
+				/*if(u.getType() == UnitType.Protoss_Assimilator){
+					if(!u.isBeingGathered()){
+						harvestGas(u);
+					}
+				}*/
 			} else if(u.getType() == UnitType.Resource_Vespene_Geyser){
 				//System.out.print("Geyser found ");
 				if(game.self().supplyUsed() > 30 && bank.build(UnitType.Protoss_Assimilator)){

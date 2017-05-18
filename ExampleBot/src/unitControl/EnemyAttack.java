@@ -7,6 +7,7 @@ import java.util.List;
 
 import bwapi.Position;
 import bwapi.Unit;
+import bwapi.UnitType;
 import bwta.BWTA;
 import bwta.Region;
 
@@ -47,6 +48,13 @@ public class EnemyAttack {
 		return result;
 	}
 	
+	public void print(){
+		System.out.print("Attack [ ");
+		for(Unit u : units){
+			System.out.print(u.getType() + " ");
+		}
+		System.out.println("]");
+	}
 	
 	public Position getPosition(){
 		//System.out.println("attack.getPosition()");
@@ -75,6 +83,9 @@ public class EnemyAttack {
 			//System.out.print("....");
 			//System.out.println(u);
 			if(u == null){
+				units.remove(u);
+			}
+			if(u.getType() == UnitType.Resource_Vespene_Geyser){
 				units.remove(u);
 			}
 		}

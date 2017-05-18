@@ -25,11 +25,13 @@ public class TestBot1 extends DefaultBWListener {
     private int gateways;
     private List<Unit> gw;
     private ResourceManager bank;
+    private ArmyManager army;
     private int count;
     private boolean core;
     private boolean robot;
     private boolean obs;
-    
+    private BuildManager buildManager;
+    private Position start;
     public TestBot1(){
     	
     }
@@ -60,11 +62,14 @@ public class TestBot1 extends DefaultBWListener {
     	gateways = 0;
         game = mirror.getGame();
         self = game.self();
-        game.setLocalSpeed(20);
+        game.setLocalSpeed(15);
         bank = new ResourceManager(game);
-        managers.add(new SupplyManager(game, bank));
-        managers.add(new BaseManager(game, bank));
-        managers.add(new ArmyManager(game));
+        buildManager = new BuildManager(game);
+        //managers.add(new SupplyManager(game, bank));
+        //managers.add(new BaseManager(game, bank));
+        army = new ArmyManager(game);
+        managers.add(army);
+        managers.add(buildManager);
         System.out.println(managers.size() + " managers");
         for(Manager man : managers){
         	man.onStart();
@@ -76,7 +81,14 @@ public class TestBot1 extends DefaultBWListener {
         BWTA.readMap();
         BWTA.analyze();
         System.out.println("Map data ready");
-        
+        for(Unit u : self.getUnits()){
+        	if(u.getType() == UnitType.Protoss_Nexus){
+        		start = u.getPosition();
+        	}
+        }
+        game.printf(Integer.toString(BWTA.getStartLocations().size()));
+        game.printf(start.toString());
+        //System.out.println(start);
         int i = 0;
         for(BaseLocation baseLocation : BWTA.getBaseLocations()){
         	//System.out.println("Base location #" + (++i) + ". Printing location's region polygon:");
@@ -85,6 +97,9 @@ public class TestBot1 extends DefaultBWListener {
         	}
         	//System.out.println();
         }
+        TilePosition a = new TilePosition(10,10);
+        TilePosition b = new TilePosition(10,10);
+        //System.out.println("a ==  b = " + (a == b));
         
         
     }
@@ -105,6 +120,7 @@ public class TestBot1 extends DefaultBWListener {
         }
     	//System.out.println("Managers Done");
 
+    	//System.out.println(UpgradeType.Singularity_Charge.whatsRequired(0));
     	if(!scouted){
     		
     		for(Unit u : self.getUnits()){
@@ -118,6 +134,7 @@ public class TestBot1 extends DefaultBWListener {
             	}
             }
     	}
+    	//System.out.println(game.getUnit(scoutID));
         //game.drawTextScreen(10, 10, "Playing as " + self.getName() + " - " + self.getRace());
 
         //StringBuilder units = new StringBuilder("My units:\n");
@@ -129,26 +146,22 @@ public class TestBot1 extends DefaultBWListener {
     		if(g.getType() == UnitType.Protoss_Gateway){
     			gway = true;
 	    		if(g.canTrain() && g.getTrainingQueue().size() < 1){
-    				if(bank.build(UnitType.Protoss_Dragoon)){
-    					g.train(UnitType.Protoss_Dragoon);
-    				} else if (bank.build(UnitType.Protoss_Zealot)){
-        				g.train(UnitType.Protoss_Zealot);
+    				if(buildManager.canAfford(UnitType.Protoss_Dragoon)){
+    					buildManager.addBuild(UnitType.Protoss_Dragoon);
+    				} else if (buildManager.canAfford(UnitType.Protoss_Zealot)){
+    					buildManager.addBuild(UnitType.Protoss_Zealot);
     				}
     			}
     		}
 		}
     	
-        if(gateways < 2 && self.supplyUsed() > 20 && bank.build(UnitType.Protoss_Gateway)){
-        	for(Unit myUnit : self.getUnits()){
-        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
-        			if(buildGateway(myUnit)){
-        				//gateways++;
-        			}
-        			break;
-        		}
-        	}
+        if(self.supplyUsed() > gateways * 15  + 20){
+        	gateways++;
+        	buildManager.addBuild(UnitType.Protoss_Gateway);
         } 
-        if(obs && bank.build(UnitType.Protoss_Observer)){
+        
+        
+        if(obs && self.minerals() > 25 && self.gas() > 75){
         	for(Unit myUnit : self.getUnits()){
         		if(myUnit.getType() == UnitType.Protoss_Robotics_Facility && myUnit.getTrainingQueue().size() < 1){
         			myUnit.train(UnitType.Protoss_Observer);
@@ -156,47 +169,28 @@ public class TestBot1 extends DefaultBWListener {
         		}
         	}
         }
-        if(!core && gway){
-        	
-        	for(Unit myUnit : self.getUnits()){
-        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
-        			if(bank.build(UnitType.Protoss_Cybernetics_Core)){
-        				System.out.println("CORE");
-        				buildBuilding(myUnit, UnitType.Protoss_Cybernetics_Core);
-        			}
-        			break;
-        		}
-        	}
+        if(!core && self.isUnitAvailable(UnitType.Protoss_Cybernetics_Core) && self.supplyUsed() > 30){
+        	core = true;
+        	buildManager.addBuild(UnitType.Protoss_Cybernetics_Core);
         }
         
-        if(!robot && core){
-        	
-        	for(Unit myUnit : self.getUnits()){
-        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
-        			if(bank.build(UnitType.Protoss_Robotics_Facility)){
-        				System.out.println("robot!");
-        				buildBuilding(myUnit, UnitType.Protoss_Robotics_Facility);
-        			}
-        			break;
-        		}
-        	}
+        if(!robot && self.isUnitAvailable(UnitType.Protoss_Robotics_Facility) && self.supplyUsed() > 50){
+        	robot = true;
+        	buildManager.addBuild(UpgradeType.Singularity_Charge);
+        	buildManager.addBuild(UnitType.Protoss_Robotics_Facility);
         }
         
-        if(robot && !obs){
-        	
-        	for(Unit myUnit : self.getUnits()){
-        		if(myUnit.getType() == UnitType.Protoss_Probe && myUnit.getID() != scoutID && myUnit.getOrder() == Order.MoveToMinerals){
-        			if(bank.build(UnitType.Protoss_Observatory)){
-        				System.out.println("obs!");
-        				buildBuilding(myUnit, UnitType.Protoss_Observatory);
-        			}
-        			break;
-        		}
-        	}
+        if(self.isUnitAvailable(UnitType.Protoss_Observatory) && !obs && self.supplyUsed() > 60){
+        	obs = true;
+        	buildManager.addBuild(UnitType.Protoss_Observatory);
         }
         //System.out.println(self.minerals() + " > 400");
-        if(bank.build(UnitType.Protoss_Nexus)){
+        if(self.minerals() > 400 && count % 907 == 0){
         	expand();
+        }
+        if(self.supplyUsed() > 200 && !army.isAttacking()){
+        	System.out.println("ATTACK");
+        	attack();
         }
         //iterate through my units
         /*for (Unit myUnit : self.getUnits()) {
@@ -207,6 +201,14 @@ public class TestBot1 extends DefaultBWListener {
         //game.drawTextScreen(10, 25, units.toString());
     }
 
+    public void attack(){
+    	for(BaseLocation b : BWTA.getStartLocations()){
+    		if(!game.isVisible(b.getTilePosition())){
+    			army.attack(b);
+    		}
+    	}
+    }
+    
 public void onUnitComplete(Unit unit){
 	for(Manager man : managers){
     	man.onUnitComplete(unit);
@@ -234,10 +236,11 @@ public void onUnitDestroy(Unit unit){
 public void onUnitDiscover(Unit unit){
 	bank.onUnitDiscover(unit);
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Gateway){
-		gateways++;
+		//gateways++;
 	} else
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Nexus){
-		gateways = 0;
+		//gateways = 0;
+		bases++;
 	} else
 	if(unit.getPlayer() == game.self() && unit.getType() == UnitType.Protoss_Cybernetics_Core){
 		core = true;

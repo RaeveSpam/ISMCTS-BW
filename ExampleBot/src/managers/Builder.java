@@ -6,15 +6,40 @@ public class Builder {
 	
 	private Game game;
 	private int stopDist;
+	private int inc;
 	
 	public Builder(Game game){
 		this.game = game;
 		stopDist = 40;
+		inc = 1;
 	}
 	
 	public Builder(Game game, int dist){
 		this.game = game;
 		stopDist = dist;
+		inc = 1;
+	}
+	
+	public Builder(Game game, int dist, int increment){
+		this.game = game;
+		stopDist = dist;
+		inc = increment;
+	} 
+	
+	public TilePosition getProtossBuildTile(Unit builder, UnitType buildingType){
+		if(buildingType != UnitType.Protoss_Pylon && buildingType != UnitType.Protoss_Nexus && buildingType != UnitType.Protoss_Assimilator){
+			for(Unit p : game.self().getUnits()){
+				if(p.getType() == UnitType.Protoss_Pylon){
+					TilePosition result = getBuildTile(builder, buildingType, p.getTilePosition());
+					if(result != null){
+						return result;
+					}
+				}
+			}
+		} else {
+			return getBuildTile(builder, buildingType, builder.getTilePosition());
+		}
+		return null;
 	}
 	
 	public TilePosition getBuildTile(Unit builder, UnitType buildingType, TilePosition aroundTile) {
@@ -33,8 +58,8 @@ public class Builder {
 	 	}*/
 
 	 	while ((maxDist < stopDist) && (ret == null)) {
-	 		for (int i=aroundTile.getX()-maxDist; i<=aroundTile.getX()+maxDist; i++) {
-	 			for (int j=aroundTile.getY()-maxDist; j<=aroundTile.getY()+maxDist; j++) {
+	 		for (int i=aroundTile.getX()-maxDist; i<=aroundTile.getX()+maxDist; i+=inc) {
+	 			for (int j=aroundTile.getY()-maxDist; j<=aroundTile.getY()+maxDist; j+=inc) {
 	 				if (game.canBuildHere(new TilePosition(i,j), buildingType, builder, false)) {
 	 					// units that are blocking the tile
 	 					boolean unitsInWay = false;

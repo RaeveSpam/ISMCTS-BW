@@ -14,7 +14,7 @@ public class ResourceManager implements Manager
 	
 	public ResourceManager(Game game){
 		this.game = game;
-		mineralAcc = 400;
+		mineralAcc = 0;
 		gasAcc = 0;
 		count = 0;
 	}
@@ -69,8 +69,8 @@ public class ResourceManager implements Manager
 		if(unit.mineralPrice() <= mineralsAvailable() &&
 			unit.gasPrice() <= gasAvailable()){
 			if(unit.isBuilding()){
-				mineralAcc += unit.mineralPrice();
-				gasAcc += unit.gasPrice();
+				//mineralAcc += unit.mineralPrice();
+				//gasAcc += unit.gasPrice();
 			}
 			return true;
 		} else {
@@ -82,11 +82,11 @@ public class ResourceManager implements Manager
 	@Override
 	public void onUnitDiscover(Unit unit) {
 		
-		if(game.self() == unit.getPlayer() && unit.getType().isBuilding()){
-			//System.out.println(unit.getType() + " " + unit.getType().mineralPrice());
+	/*	if(game.self() == unit.getPlayer() && unit.getType().isBuilding()){
+			System.out.println(unit.getType() + " " + unit.getType().mineralPrice());
 			mineralAcc -= unit.getType().mineralPrice();
 			gasAcc -= unit.getType().gasPrice();
-		}
+		}*/
 	}
 
 }
