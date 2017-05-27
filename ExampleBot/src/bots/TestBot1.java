@@ -10,6 +10,7 @@ import bwta.BWTA;
 import bwta.BaseLocation;
 
 import managers.*;
+import stateInformation.EnemyBuilding;
 
 public class TestBot1 extends DefaultBWListener {
 
@@ -17,7 +18,8 @@ public class TestBot1 extends DefaultBWListener {
 
     private Game game;
     private Player self;
-
+    private UnitType testType;
+    
     private int scoutID;
     private boolean scouted;
     private List<Manager> managers;
@@ -32,13 +34,14 @@ public class TestBot1 extends DefaultBWListener {
     private boolean obs;
     private BuildManager buildManager;
     private Position start;
+    boolean test = false;
     public TestBot1(){
     	
     }
     
     public void run() {
         mirror.getModule().setEventListener(this);
-        mirror.startGame();
+        mirror.startGame(); 
     }
 
     @Override
@@ -62,7 +65,7 @@ public class TestBot1 extends DefaultBWListener {
     	gateways = 0;
         game = mirror.getGame();
         self = game.self();
-        game.setLocalSpeed(15);
+        game.setLocalSpeed(0);
         bank = new ResourceManager(game);
         buildManager = new BuildManager(game);
         //managers.add(new SupplyManager(game, bank));
@@ -70,7 +73,7 @@ public class TestBot1 extends DefaultBWListener {
         army = new ArmyManager(game);
         managers.add(army);
         managers.add(buildManager);
-        System.out.println(managers.size() + " managers");
+        //System.out.println(managers.size() + " managers");
         for(Manager man : managers){
         	man.onStart();
         }
@@ -106,6 +109,16 @@ public class TestBot1 extends DefaultBWListener {
 
     @Override
     public void onFrame() {
+    	//System.out.println(UnitType.Protoss_Photon_Cannon);
+    	//System.out.println(testType);
+    	for(BaseLocation b : BWTA.getStartLocations()){
+    		if(!game.isVisible(b.getTilePosition())){
+    			for(Unit u : game.getUnitsOnTile(b.getTilePosition())){
+    				System.out.println(u.getType());
+    			}
+    			
+    		}
+    	}
     	//System.out.println("onFrame");
         //game.setTextSize(10);
     	//System.out.println("---- Run " + managers.size() + " Managers ----");
@@ -207,6 +220,10 @@ public class TestBot1 extends DefaultBWListener {
     			army.attack(b);
     		}
     	}
+    }
+    
+    public void onEnd(boolean b){
+    	System.out.println("Game End " + b);
     }
     
 public void onUnitComplete(Unit unit){

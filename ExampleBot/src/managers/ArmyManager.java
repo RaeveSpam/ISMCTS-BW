@@ -11,10 +11,13 @@ import java.util.Set;
 
 import com.sun.xml.internal.bind.v2.model.runtime.RuntimeArrayInfo;
 
+import bots.ISMCTSBot;
 import bwapi.Game;
 import bwapi.Position;
 import bwapi.TilePosition;
 import bwta.Region;
+import stateInformation.EnemyBuilding;
+import stateInformation.EnemyUnit;
 import unitControl.*;
 import bwta.BWTA;
 import bwta.BaseLocation;
@@ -38,6 +41,12 @@ public class ArmyManager implements Manager {
 	private EnemyAttack enemyAttack;
 	private int count;
 	private Position oldStagingArea;
+	private int scoutID;
+	
+	private HashSet<EnemyBuilding> enemyBuildings;
+    private List<EnemyUnit> enemyUnits;
+    private EnemyBuilding target;
+    private BaseLocation enemyMain;
 	
 	public ArmyManager(Game game){
 		this.game = game;
@@ -48,7 +57,7 @@ public class ArmyManager implements Manager {
 		enemyRegions = new ArrayList<Region>();
 		ownedRegions = new ArrayList<Region>();
 		stagingArea = null;
-
+		
 		
 		idleUnits = new ArrayList<UnitGroup>();
 		activeUnits = new ArrayList<UnitGroup>();
@@ -56,9 +65,64 @@ public class ArmyManager implements Manager {
 		count = 0;
 	}
 	
+	public void updateEnemyUnits(){
+    	// Current information on enemy units
+    	List<EnemyUnit> current = new ArrayList<EnemyUnit>();
+    	
+    	for(Unit u : game.enemy().getUnits()){
+    		if(!u.getType().isBuilding() && !u.getType().isWorker() && u.getType() != UnitType.Unknown){
+    			boolean found = false;
+    			for(EnemyUnit eu : current){
+    				if(eu.type == u.getType()){
+    					found = true;
+    					eu.number++;
+    					break;
+    				}
+    			}
+    			if(!found){
+    				current.add(new EnemyUnit(u.getType()));
+    			}
+    		} 
+    	}
+    	//game.printf("Current enemy units " + current.size());
+    	// Compare to previous knowledge
+    	for(EnemyUnit c : current){
+    		boolean found = false;
+    		for(EnemyUnit o : enemyUnits){
+    			//game.printf(o.type.toString());
+    			if(c.type == o.type){  
+    				found = true;
+    				if(c.number > o.number){
+    					o.number = c.number;
+    				}
+    				break;
+    			}
+    		}
+    		if(!found){
+    			enemyUnits.add(c);
+    		}
+    	}
+    	for(EnemyUnit eu : enemyUnits){
+    		if(eu.number < 1){
+    			enemyUnits.remove(eu);
+    		}
+    	}
+    	for(EnemyBuilding b : enemyBuildings){
+    		if(!b.stillExists(game)){
+    			enemyBuildings.remove(b);
+    			if(target == b){
+    				attack(enemyMain);
+    			}
+    		}
+    	}
+    	
+    	
+    }
+	
 	@Override
 	public void onStart() {
 		defender = new DefenceHelper(game);
+		target = null;
 		//updateStagingArea();
 		// TODO Auto-generated method stub
 
@@ -74,10 +138,17 @@ public class ArmyManager implements Manager {
 		for(int i = count%4; i < units.size(); i+=4){
 			Unit unit = units.get(i);
 			if(	!unit.getType().isBuilding() &&
-				!unit.getType().isWorker()){
+				!unit.getType().isWorker() &&
+				unit.getID() != scoutID ){
 				unit.attack(target);
-				if(unit.getType() == UnitType.Protoss_Observer){
+				if(!unit.getType().canAttack()){
 					unit.move(target);
+				}
+				if(unit.getType() == UnitType.Protoss_Reaver){
+					unit.train(UnitType.Protoss_Scarab);
+				}
+				if(unit.getType() == UnitType.Protoss_Carrier){
+					unit.train(UnitType.Protoss_Interceptor);
 				}
 			} 
 			
@@ -112,7 +183,7 @@ public class ArmyManager implements Manager {
 				} else {
 					// defend
 					if(enemyAttack.getPosition() != null) {
-						enemyAttack.print();
+						//enemyAttack.print();
 						attackMoveAll(enemyAttack.getPosition());
 					}
 
@@ -128,6 +199,53 @@ public class ArmyManager implements Manager {
 		
 	
 	}
+	
+	/**
+	 * Simple Attack
+	 */
+	public void attack(BaseLocation enemyMainBase){
+		enemyMain = enemyMainBase;
+		if(enemyBuildings.size() < 1){
+			attack(BWTA.getRegion(enemyMainBase.getTilePosition()));
+		} else {
+			for(EnemyBuilding b : enemyBuildings){
+				if(target == null || b.type.mineralPrice() > target.type.mineralPrice()){
+					target = b;
+				}
+			}
+		}
+		attack(BWTA.getRegion(target.position));
+	}
+	
+	/*public void attack(BaseLocation base){
+		attack(BWTA.getRegion(base.getTilePosition()));
+	}*/
+	
+	/**
+	 * Simple scout
+	 */
+	public void scout(){
+		
+	}
+	
+	public void scout(Position position){
+		getScout().move(position);
+	}
+	
+	public Unit getScout(){
+		Unit result = null;
+		for(Unit unit : game.self().getUnits()){
+			if(result == null && !unit.getType().isBuilding()){
+				result = unit;
+			} else if(unit.getType().topSpeed() > result.getType().topSpeed()){
+				result = unit;
+			} 
+			
+		}
+		scoutID = result.getID();
+		return result;
+	}
+	
 	/*
 	 * Detects and returns the strongest (most supply) attack in the owned regions.
 	 * Return null if no relevant attack is found.
@@ -187,19 +305,19 @@ public class ArmyManager implements Manager {
 	}
 	
 	public void attack(Region reg){
+		//System.out.println("Attack 2");
 		isAttacking = true;
 		oldStagingArea = stagingArea;
 		stagingArea = reg.getCenter();
 		targetRegion = reg;
-		
+	//	System.out.println("Attack 3 " + isAttacking);	
 
 	}
 	
-	public void attack(BaseLocation base){
-		isAttacking = true;
-		oldStagingArea = stagingArea;
-		stagingArea = base.getPosition();
-		targetRegion = BWTA.getRegion(stagingArea);
+	
+	
+	public BaseLocation getTarget(){
+		return BWTA.getNearestBaseLocation(targetRegion.getCenter());
 	}
 	
 	public void withDraw(){
@@ -348,6 +466,11 @@ public class ArmyManager implements Manager {
 		} else {
 			defender.onUnitDestroy(unit);
 		}
+		if(unit.getPlayer() == game.enemy() 
+				&& !unit.getType().isBuilding()
+				&& !unit.getType().isWorker()){
+				deadEnemyUnit(unit.getType());
+			}
 	}
 
 	@Override
@@ -357,5 +480,16 @@ public class ArmyManager implements Manager {
 		scout.onUnitDiscover(unit);
 		
 	}
+	
+	private void deadEnemyUnit(UnitType type){
+    	boolean found = false;
+		for(EnemyUnit eu : enemyUnits){
+			if(eu.type == type){
+				found = true;
+				eu.number--;
+				break;
+			}
+		}
+    }
 
 }

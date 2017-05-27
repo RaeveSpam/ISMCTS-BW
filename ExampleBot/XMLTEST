@@ -1,91 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <java version="1.8.0_131" class="java.beans.XMLDecoder">
- <object class="bots.Node" id="Node0"/>
-<void class="bots.Edge" method="getField">
- <string>value</string>
- <void method="set">
-  <object class="bots.Edge" id="Edge0"/>
-  <int>2</int>
- </void>
-</void>
-<void class="bots.Node" method="getField">
- <string>value</string>
- <void method="set">
-  <object class="bots.Node" id="Node1"/>
-  <int>1</int>
- </void>
-</void>
-<void class="bots.Edge" id="Field0" method="getField">
+ <object class="ISMCTS.Node" id="Node0">
+  <void class="ISMCTS.Node" method="getField">
+   <string>suckIt</string>
+   <void method="set">
+    <object idref="Node0"/>
+    <string>node0</string>
+   </void>
+  </void>
+ </object>
+<void class="ISMCTS.Node" id="Field0" method="getField">
  <string>children</string>
  <void id="ArrayList0" method="get">
-  <object class="bots.Edge" id="Edge1"/>
+  <object idref="Node0"/>
   <void method="add">
-   <object class="bots.Node" id="Node2">
-    <void class="bots.Node" method="getField">
-     <string>value</string>
+   <object class="ISMCTS.Edge" id="Edge0">
+    <void class="ISMCTS.Edge" method="getField">
+     <string>fuck</string>
      <void method="set">
-      <object idref="Node2"/>
-      <int>2</int>
+      <object idref="Edge0"/>
+      <string>edge0</string>
+     </void>
+    </void>
+    <void class="ISMCTS.Edge" method="getField">
+     <string>action</string>
+     <void method="set">
+      <object idref="Edge0"/>
+      <object class="actions.Withdraw"/>
      </void>
     </void>
    </object>
-  </void>
-  <void method="add">
-   <object idref="Node1"/>
   </void>
  </void>
 </void>
 <void idref="ArrayList0"/>
-<void class="bots.Edge" id="Field1" method="getField">
+<void class="ISMCTS.Edge" id="Field1" method="getField">
  <string>children</string>
  <void id="ArrayList1" method="get">
-  <object class="bots.Edge" id="Edge2">
-   <void class="bots.Edge" method="getField">
-    <string>value</string>
-    <void method="set">
-     <object idref="Edge2"/>
-     <int>1</int>
-    </void>
-   </void>
-  </object>
-  <void method="add">
-   <object idref="Node2"/>
-  </void>
- </void>
-</void>
-<void idref="ArrayList1"/>
-<void class="bots.Edge" id="Field2" method="getField">
- <string>children</string>
- <void id="ArrayList2" method="get">
   <object idref="Edge0"/>
   <void method="add">
-   <object class="bots.Node" id="Node3">
-    <void class="bots.Node" method="getField">
-     <string>value</string>
+   <object class="ISMCTS.Node" id="Node1">
+    <void class="ISMCTS.Node" method="getField">
+     <string>suckIt</string>
      <void method="set">
-      <object idref="Node3"/>
-      <int>3</int>
+      <object idref="Node1"/>
+      <string>node1</string>
      </void>
     </void>
    </object>
   </void>
  </void>
 </void>
-<void idref="ArrayList2"/>
-<void class="bots.Node" id="Field3" method="getField">
- <string>children</string>
- <void id="ArrayList3" method="get">
-  <object idref="Node0"/>
-  <void method="add">
-   <object idref="Edge2"/>
-  </void>
-  <void method="add">
-   <object idref="Edge0"/>
-  </void>
-  <void method="add">
-   <object idref="Edge1"/>
-  </void>
- </void>
-</void>
-<void idref="ArrayList3"/>
+<void idref="ArrayList1"/>
 </java>

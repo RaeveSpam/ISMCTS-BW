@@ -1,23 +1,42 @@
-package buildActions;
+package actions;
 
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
 import bwapi.Game;
 import bwapi.Unit;
 import bwapi.UnitType;
+import stateInformation.Player;
 import bwapi.Pair;
 
-public class BuildUnit extends BuildAction<UnitType> {
+public class BuildUnit extends BuildAction<Entity> {
 
-	private boolean hasBeenBuilt;
-	private Unit trainAt;
+	private transient boolean hasBeenBuilt;
+	private transient Unit trainAt;
 	
-	public BuildUnit(Game game, UnitType unit){
+	public BuildUnit(){
+		super();
+	}
+	
+	public BuildUnit(Entity unit){
+		super();
+		type = unit;
+	}
+	
+	public BuildUnit(Game game, Entity unit){
 		super(game, unit);
 		hasBeenBuilt = false;
 		trainAt = null;
 	}
 	
+	public BuildUnit(Game game, Entity unit, Player player){
+		super(game, unit);
+		hasBeenBuilt = false;
+		trainAt = null;
+		this.player = player;
+	}
+	
 	public boolean setTrainAt(Unit unit){
-		if(unit.exists() && unit.getType() == type.whatBuilds().first){
+		if(unit.exists() && unit.getType() == ISMCTS.entityToType(type).whatBuilds().first){
 			trainAt = unit;
 			return true;
 		} else {
@@ -32,12 +51,12 @@ public class BuildUnit extends BuildAction<UnitType> {
 
 	@Override
 	public int getMinerals() {
-		return type.mineralPrice();
+		return ISMCTS.entityToType(type).mineralPrice();
 	}
 
 	@Override
 	public int getGas() {
-		return type.gasPrice();
+		return ISMCTS.entityToType(type).gasPrice();
 	}
 
 	
@@ -49,11 +68,11 @@ public class BuildUnit extends BuildAction<UnitType> {
 			if(!trainAt.exists()){
 				return false;
 			}
-			if(trainAt.getTrainingQueue().size() < 1){
-				hasBeenBuilt = trainAt.train(type);
+			if(trainAt.getTrainingQueue().size() < 2){
+				hasBeenBuilt = trainAt.train(ISMCTS.entityToType(type));
 			}
 		} else {
-			Pair pair = type.whatBuilds();
+			Pair pair = ISMCTS.entityToType(type).whatBuilds();
 			Unit best = null;
 			for(Unit u : game.self().getUnits()){
 				if(u.getType() == pair.first){
@@ -65,8 +84,8 @@ public class BuildUnit extends BuildAction<UnitType> {
 					
 				}
 			}
-			if(best != null && best.getTrainingQueue().size() < 1){
-				hasBeenBuilt = best.train(type);
+			if(best != null && best.getTrainingQueue().size() < 2){
+				hasBeenBuilt = best.train(ISMCTS.entityToType(type));
 			}
 		}
 		return hasBeenBuilt;
@@ -74,13 +93,13 @@ public class BuildUnit extends BuildAction<UnitType> {
 
 	@Override
 	public boolean canBeBuilt() {
-		if(trainAt != null){
+		/*if(trainAt != null){
 			if(!trainAt.exists() || trainAt.getTrainingQueue().size() > 0){
 				return false;
 			}
-		}
+		}*/
 		//System.out.println(type + " " + game.self().isUnitAvailable(type));
-		return game.self().isUnitAvailable(type);
+		return game.self().isUnitAvailable(ISMCTS.entityToType(type));
 	}
 
 }

@@ -11,12 +11,15 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import buildActions.*;
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
+import actions.*;
 
 public class BuildManager implements Manager {
 	
 	LinkedList<BuildAction> buildQueue;
 	ArrayList<BuildBuilding> activeBuilds;
+	ArrayList<BuildAction> unitsAndUpgrades;
 	Game game;
 	Builder builder;
 	Builder pylonBuilder;
@@ -31,7 +34,7 @@ public class BuildManager implements Manager {
 		 builder = new Builder(game, 20);
 		 pylonBuilder = new Builder(game, 40, 1);
 		 activeBuilds = new ArrayList<BuildBuilding>();
-		 
+		 unitsAndUpgrades = new ArrayList<BuildAction>();
 		 projectedSupply = 0;
 		 count = 0;
 	}
@@ -89,7 +92,7 @@ public class BuildManager implements Manager {
 			} else if(u.getType() == UnitType.Resource_Vespene_Geyser){
 				if(game.self().supplyUsed() > 30){
 					//System.out.println("Build Assimilator");
-					BuildBuilding bb = new BuildBuilding(game, UnitType.Protoss_Assimilator);
+					BuildBuilding bb = new BuildBuilding(game, Entity.Assimilator);
 					bb.buildTile = u.getTilePosition();
 					if(canAfford(bb)){
 						buildQueue.addFirst(bb);
@@ -124,34 +127,46 @@ public class BuildManager implements Manager {
 	
 	private void manageBuildQueue(){
 		// Check ongoing builds
+		System.out.print("[");
 		for(BuildBuilding a : activeBuilds){
-			a.count++;//System.out.println(a.type);
-			if(a.hasBeenBuilt()){
+			a.count++;
+			a.game = game;
+			System.out.print(a.type + ", ");
+			if(a.hasBeenBuilt() || !a.canBeBuilt()){
 				activeBuilds.remove(a);
 			} else if(a.count > timeOut){
+				a.reset();
 				a.count = 0;
 				build(a);
-				break;
+				//break;
 			}
-		}		
-		// start new builds
-	/*	System.out.print("[");
-		for(BuildAction b : buildQueue){
-			System.out.print(b.type + " ; ");
 		}
-		System.out.println("]"); */ 
+		System.out.println("]");
+	//	System.out.println("***********");
+		for(BuildAction a : unitsAndUpgrades){
+			if(a.canBeBuilt()){
+				if(a.build()){
+					unitsAndUpgrades.remove(a);
+					//break;
+				}  				
+			} else {
+				unitsAndUpgrades.remove(a);
+				//break;
+			}
+			
+		}
 		boolean cont = true;
-		
-		//System.out.println(buildQueue.size());
 		while(cont && !buildQueue.isEmpty()){
 			BuildAction ba = buildQueue.peek();
-			//System.out.print(ba.type + ", ");
+			ba.game = game;	
 			if(!ba.canBeBuilt()){ // doesn't have requirements, remove.
+				System.out.println("Can't build pop " + ba.type);
 				buildQueue.pop();
 				/*if(buildQueue.size() > 2){
 					break;
 				}*/
 			} else {
+				//System.out.println("Can afford " + ba.type + " " + canAfford(ba));
 				if(canAfford(ba)){
 					if(ba.isBuilding){
 						if(build((BuildBuilding)ba)){;
@@ -163,8 +178,9 @@ public class BuildManager implements Manager {
 						if(ba.build()){
 							buildQueue.pop();
 						} else {
-							buildQueue.addLast(buildQueue.pop());
-							cont = false;
+							unitsAndUpgrades.add(buildQueue.pop());
+							//buildQueue.addLast(buildQueue.pop());
+							//cont = false;
 						}
 					}
 				} else {
@@ -172,6 +188,7 @@ public class BuildManager implements Manager {
 				}
 			}
 		}
+		
 	}
 	
 	private void harvestGas(Unit refinery){
@@ -203,6 +220,10 @@ public class BuildManager implements Manager {
 		// Calculate available resources
 		int minerals = game.self().minerals();
 		int gas = game.self().gas();
+		for(BuildAction a : unitsAndUpgrades){
+			minerals -= a.getMinerals();
+			gas -= a.getGas();
+		}
 		for(BuildAction a : activeBuilds){
 			minerals -= a.getMinerals();
 			gas -= a.getGas();
@@ -214,6 +235,7 @@ public class BuildManager implements Manager {
 	private boolean canAfford(BuildAction buildAction){
 		// Calculate available resources
 		//System.out.println("canAfford " + buildAction.type);
+		buildAction.game = game;
 		int minerals = game.self().minerals();
 		int gas = game.self().gas();
 		for(BuildAction a : activeBuilds){
@@ -225,6 +247,7 @@ public class BuildManager implements Manager {
 	}
 	
 	private boolean build(BuildBuilding ba){
+		ba.game = game;
 		if(!ba.hasBuilder()){
 			Unit probe = getProbe();
 			if(probe != null){
@@ -234,12 +257,23 @@ public class BuildManager implements Manager {
 			}
 		}
 		//System.out.println(ba.type + "tile == " + ba.isBuildTileValid());
-		if(!ba.isBuildTileValid()){
-			TilePosition pos;
-			if(ba.type == UnitType.Protoss_Pylon){
-				pos = pylonBuilder.getProtossBuildTile(ba.probe, ba.type);
+		TilePosition pos;
+		if(ba.type == Entity.Nexus){
+			if(game.isVisible(ba.buildTile) && ba.isBuildTileValid()){
+				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
+			} else if(!game.isVisible(ba.buildTile)){
+				ba.probe.move(ba.buildTile.toPosition());
+				return true;
 			} else {
-				pos = builder.getProtossBuildTile(ba.probe, ba.type);
+				return true;
+			}
+		} else if(!ba.isBuildTileValid()){
+			if(ISMCTS.entityToType(ba.type) == UnitType.Protoss_Pylon){
+				//pos = pylonBuilder.getProtossBuildTile(ba.probe, ISMCTS.entityToType(ba.type));
+				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
+			} else {
+				//pos = builder.getProtossBuildTile(ba.probe, ISMCTS.entityToType(ba.type));
+				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
 			}
 			if(pos != null){
 				ba.buildTile = pos;
@@ -252,7 +286,7 @@ public class BuildManager implements Manager {
 	}
 	
 	private void buildPylon(){
-		BuildBuilding b = new BuildBuilding(game, UnitType.Protoss_Pylon);
+		BuildBuilding b = new BuildBuilding(game, Entity.Pylon);
 		buildQueue.addFirst(b);
 	}
 	
@@ -263,19 +297,24 @@ public class BuildManager implements Manager {
 	public void addBuild(UnitType type){
 		BuildAction b;
 		if(type.isBuilding()){
-			b = new BuildBuilding(game, type);
+			b = new BuildBuilding(game, ISMCTS.typeToEntity(type));
 		} else {
-			b = new BuildUnit(game, type);
+			b = new BuildUnit(game, ISMCTS.typeToEntity(type));
 		}
 		buildQueue.addLast(b);
 	}
+	
+	public void addBuild(BuildAction action){
+		buildQueue.addLast(action);
+	}
+
 	
 	/**
 	 * Add one instance of UpgradeType type to build queue
 	 * @param type
 	 */
 	public void addBuild(UpgradeType type){
-		buildQueue.addLast(new BuildUpgrade(game, type));
+		buildQueue.addLast(new BuildUpgrade(game, ISMCTS.upgradeToTech(type)));
 	}
 	
 	/**
@@ -283,8 +322,9 @@ public class BuildManager implements Manager {
 	 * @param type
 	 */
 	public void addExpansion(TilePosition pos){
-		BuildBuilding b = new BuildBuilding(game, UnitType.Protoss_Nexus);
+		BuildBuilding b = new BuildBuilding(game, Entity.Nexus);
 		b.buildTile = pos;
+		//System.out.println("Expanding (" + b.buildTile.getX() + ", " + b.buildTile.getY() + ")");
 	}
 	
 	private Unit getProbe(){

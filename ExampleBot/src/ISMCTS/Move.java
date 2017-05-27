@@ -5,5 +5,10 @@ public enum Move {
 	Upgrade, 
 	Attack, 
 	Withdraw, 
-	Expand;
+	Expand,
+	buildWorkers,
+	stopBuildingWorkers,
+	scout,
+	none,
+	unknown;
 }

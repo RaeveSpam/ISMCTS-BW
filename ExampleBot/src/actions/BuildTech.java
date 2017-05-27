@@ -1,19 +1,31 @@
-package buildActions;
+package actions;
 
 import bwapi.Game;
 import bwapi.TechType;
 import bwapi.Unit;
 import bwapi.UnitType;
+import stateInformation.Player;
 
 // ACTIVE ABILITIES
 
 public class BuildTech extends BuildAction<TechType> {
 
-	UnitType researchedAt;
+	transient UnitType researchedAt;
+	
+	public BuildTech(){
+		
+	}
 	
 	public BuildTech(Game game, TechType tech) {
 		super(game, tech);
 		researchedAt = tech.whatResearches();
+		// TODO Auto-generated constructor stub
+	}
+	
+	public BuildTech(Game game, TechType tech, Player player) {
+		super(game, tech);
+		researchedAt = tech.whatResearches();
+		this.player = player;
 		// TODO Auto-generated constructor stub
 	}
 

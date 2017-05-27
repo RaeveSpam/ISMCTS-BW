@@ -1,5 +1,6 @@
 package managers;
 
+import ISMCTS.ISMCTS;
 import bwapi.*;
 
 public class Builder {
@@ -30,7 +31,7 @@ public class Builder {
 		if(buildingType != UnitType.Protoss_Pylon && buildingType != UnitType.Protoss_Nexus && buildingType != UnitType.Protoss_Assimilator){
 			for(Unit p : game.self().getUnits()){
 				if(p.getType() == UnitType.Protoss_Pylon){
-					TilePosition result = getBuildTile(builder, buildingType, p.getTilePosition());
+					TilePosition result = game.getBuildLocation(buildingType, p.getTilePosition(), 10);
 					if(result != null){
 						return result;
 					}

@@ -1,17 +1,30 @@
-package buildActions;
+package actions;
 
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
 import bwapi.Game;
 import bwapi.TilePosition;
 import bwapi.Unit;
 import bwapi.UnitType;
+import stateInformation.Player;
 
-public class BuildBuilding extends BuildAction<UnitType> {
-	public TilePosition buildTile;
-	public int count;
-	public Unit probe;
+public class BuildBuilding extends BuildAction<Entity> {
+	public transient TilePosition buildTile;
+	public transient int  count;
+	public transient Unit probe;
 	
+	public BuildBuilding(){
+
+	}
 	
-	public BuildBuilding(Game game, UnitType building){
+	public void reset(){
+		if(type != Entity.Nexus) {
+			buildTile = null;
+		}
+		probe = null;
+	}
+	
+	public BuildBuilding(Game game, Entity building){
 		super(game, building);
 		count = 0;
 		//type = building;
@@ -20,6 +33,19 @@ public class BuildBuilding extends BuildAction<UnitType> {
 		isBuilding = true;
 	}
 	
+	public void setBaseLocation(int i){
+		baseLocation = i;
+	}
+	
+	public BuildBuilding(Game game, Entity building, Player player){
+		super(game, building);
+		count = 0;
+		//type = building;
+		buildTile = null;
+		probe = null;
+		isBuilding = true;
+		this.player = player;
+	}
 	
 	public void assignBuilder(Unit probe){
 		this.probe = probe;
@@ -33,7 +59,7 @@ public class BuildBuilding extends BuildAction<UnitType> {
 		if(buildTile == null){
 			return false;
 		}
-		return game.canBuildHere(buildTile, type);
+		return game.canBuildHere(buildTile, ISMCTS.entityToType(type));
 	}
 	
 	public boolean hasBuilder(){
@@ -51,7 +77,7 @@ public class BuildBuilding extends BuildAction<UnitType> {
 			return true;
 		}
 		if(hasBuilder() && isBuildTileValid()){
-			if(probe.build(type, buildTile)){
+			if(probe.build(ISMCTS.entityToType(type), buildTile)){
 				count = 0;
 				return true;
 			}
@@ -61,6 +87,7 @@ public class BuildBuilding extends BuildAction<UnitType> {
 
 	
 	public boolean isBuiltOnTile(TilePosition pos){
+		
 		if(buildTile == null){
 			return false;
 		}
@@ -77,10 +104,13 @@ public class BuildBuilding extends BuildAction<UnitType> {
 	@Override
 	public boolean hasBeenBuilt(){
 		if(buildTile == null){
+			if(type == Entity.Nexus){
+				return true;
+			}
 			return false;
 		}
 		for(Unit b : game.getUnitsOnTile(buildTile)){
-			if(b.getType() == type){
+			if(b.getType() == ISMCTS.entityToType(type)){
 				return true;
 			}
 		}
@@ -90,25 +120,25 @@ public class BuildBuilding extends BuildAction<UnitType> {
 
 	@Override
 	public int getMinerals() {
-		return type.mineralPrice();
+		return ISMCTS.entityToType(type).mineralPrice();
 	}
 
 
 	@Override
 	public int getGas() {
-		return type.gasPrice();
+		return ISMCTS.entityToType(type).gasPrice();
 	}
 
 
 	@Override
 	public boolean canBeBuilt() {
-		if(type == UnitType.Protoss_Assimilator){
-			if(!game.canBuildHere(buildTile, type)){
+		if(ISMCTS.entityToType(type) == UnitType.Protoss_Assimilator){
+			if(!game.canBuildHere(buildTile, ISMCTS.entityToType(type))){
 				return false;
 			}
 		}
 		//System.out.println(type + " " + game.self().isUnitAvailable(type));
-		return game.self().isUnitAvailable(type);
+		return game.self().isUnitAvailable(ISMCTS.entityToType(type));
 		//return hasBuilder() && isBuildTileValid();
 	}
 	

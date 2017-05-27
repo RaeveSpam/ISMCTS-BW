@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_131" class="java.beans.XMLDecoder">
+ <object class="stateInformation.EnemyBuilding" id="EnemyBuilding0">
+  <void class="stateInformation.EnemyBuilding" method="getField">
+   <string>name</string>
+   <void method="set">
+    <object idref="EnemyBuilding0"/>
+    <string>dickWingle</string>
+   </void>
+  </void>
+ </object>
+</java>
