@@ -58,10 +58,10 @@ public class BuildManager implements Manager {
 		countWorkers();
 		
 		List<Unit> units = game.self().getUnits();
-		System.out.println(units.size() + " units found");
+		//System.out.println(units.size() + " units found");
 		for(Unit myUnit : units){
 			if(myUnit.getType() == UnitType.Protoss_Nexus){
-				System.out.println("Manage Base");
+			//	System.out.println("Manage Base");
 				manageBase(myUnit);
 			} else
 			if(myUnit.getType() == UnitType.Protoss_Probe && (
