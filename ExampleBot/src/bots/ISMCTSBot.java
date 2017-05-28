@@ -71,7 +71,6 @@ public class ISMCTSBot extends DefaultBWListener {
     }
     
     public void onFrame(){
-
     	buildManager.onFrame();
     	//System.out.println("*   Army  Manager   *");
     	armyManager.onFrame();
@@ -80,6 +79,15 @@ public class ISMCTSBot extends DefaultBWListener {
     	// ISMCTS
     	
     	if(count < 1) {
+    		
+    		Map<UnitType, Integer> map = UnitType.Protoss_Carrier.requiredUnits();
+    		if(map.size() < 1){
+    			//return true;
+    		}
+    		System.out.println(map.keySet());
+    		for(UnitType u : map.keySet()){
+    			
+    		}
     		
     		count = 450;
     		System.out.println("*      *");
