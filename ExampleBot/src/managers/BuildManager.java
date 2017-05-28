@@ -191,7 +191,7 @@ public class BuildManager implements Manager {
 				if(canAfford(ba)){
 					if(ba.isBuilding){
 						boolean startBuilding = build((BuildBuilding)ba);
-						//System.out.println(startBuilding);
+						System.out.println(ba.type);
 						if(startBuilding){;
 							activeBuilds.add((BuildBuilding)buildQueue.pop());
 						} else {
@@ -281,7 +281,7 @@ public class BuildManager implements Manager {
 			}
 		}
 		//System.out.println(ba.type + "tile == " + ba.isBuildTileValid());
-		TilePosition pos;
+		TilePosition pos = null;
 		if(ba.type == Entity.Nexus){
 			if(game.isVisible(ba.buildTile) && ba.isBuildTileValid()){
 				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
@@ -297,7 +297,16 @@ public class BuildManager implements Manager {
 				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
 			} else {
 				//pos = builder.getProtossBuildTile(ba.probe, ISMCTS.entityToType(ba.type));
-				pos = game.getBuildLocation(ISMCTS.entityToType(ba.type), ba.probe.getTilePosition(), 20);
+				for(Unit pylon : game.self().getUnits()){
+					if(pylon.getType() == UnitType.Protoss_Pylon){
+						TilePosition tempPos = game.getBuildLocation(ISMCTS.entityToType(ba.type), pylon.getTilePosition(), 10);
+						if(game.canBuildHere(tempPos, ISMCTS.entityToType(ba.type))){
+							pos = tempPos;
+							break;
+						}
+					}
+				}
+				
 			}
 			if(pos != null){
 				ba.buildTile = pos;

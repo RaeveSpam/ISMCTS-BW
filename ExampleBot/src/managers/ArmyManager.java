@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import com.sun.xml.internal.bind.v2.model.runtime.RuntimeArrayInfo;
@@ -245,16 +246,42 @@ public class ArmyManager implements Manager {
 	
 	}
 	
+	public BaseLocation getUnExploredBase(){
+		ArrayList<BaseLocation> unExplored = new ArrayList<BaseLocation>();
+		ArrayList<BaseLocation> invisible = new ArrayList<BaseLocation>();
+		for(BaseLocation b : BWTA.getBaseLocations()){
+			if(!game.isExplored(b.getTilePosition())){
+				unExplored.add(b);
+			}
+			if(!game.isVisible(b.getTilePosition())){
+				invisible.add(b);
+			}
+		}
+		Random random = new Random();
+		if(unExplored.size() > 0){
+			return unExplored.get(random.nextInt(unExplored.size()));
+		} 
+		if(invisible.size() > 0){
+			return invisible.get(random.nextInt(invisible.size()));
+		} 		
+		return null;
+	}
+	
 	/**
 	 * Simple Attack
 	 */
 	public void attack(BaseLocation enemyMainBase){
-		
+		if(game.isExplored(enemyMainBase.getTilePosition()) && enemyBuildings.size() < 1){
+			BaseLocation temp = getUnExploredBase();
+			if(temp != null){
+				attack(BWTA.getRegion(getUnExploredBase().getTilePosition()));
+			}
+		}
 		updateEnemyUnits();
 		System.out.println("ATTACK");
 		//isAttacking = true;
 		enemyMain = enemyMainBase;
-		System.out.println(enemyBuildings);
+		//System.out.println(enemyBuildings);
 		if(enemyBuildings.size() < 1){
 			attack(BWTA.getRegion(enemyMainBase.getTilePosition()));
 		} else {

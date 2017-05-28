@@ -59,7 +59,7 @@ public class ISMCTSBot extends DefaultBWListener {
     	self = game.self();
     	BWTA.readMap();
     	BWTA.analyze();
-    	game.setLocalSpeed(5);
+    	game.setLocalSpeed(0);
     	buildManager = new BuildManager(game);
     	armyManager = new ArmyManager(game);
     	buildManager.onStart();
@@ -73,11 +73,21 @@ public class ISMCTSBot extends DefaultBWListener {
     }
     
     public void onFrame(){
+    	timeoutCount++;
+    	if(timeoutCount > 50000 && self.supplyUsed() < 200){
+    		game.leaveGame();
+    	}
+    	// equivalent to 30 minutes 
+    	if(timeoutCount > 54000){
+    		game.leaveGame();
+    	}
+    	
+    	
     	buildManager.onFrame();
     	//System.out.println("*   Army  Manager   *");
     	armyManager.onFrame();
     	//updateEnemyUnits();
-    	timeoutCount++;
+    	
     	// ISMCTS
     	
     	if(count < 1) {    		
@@ -105,13 +115,7 @@ public class ISMCTSBot extends DefaultBWListener {
     	count--;
 
     	// 25 minutes passed and sub 50 supply
-    	if(timeoutCount > 45000 && self.supplyUsed() < 100){
-    		game.leaveGame();
-    	}
-    	// equivalent to 30 minutes 
-    	if(timeoutCount > 54000){
-    		game.leaveGame();
-    	}
+    	
     }
     
     public boolean performAction(Action action){
