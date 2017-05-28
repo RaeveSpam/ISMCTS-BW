@@ -84,7 +84,7 @@ public class BuildBuilding extends BuildAction<Entity> {
 				return true;
 			}
 		}
-		System.out.println("Order failed " + game.getLastError().toString());
+		//System.out.println("Order failed " + game.getLastError().toString());
 		
 		return false;
 	}

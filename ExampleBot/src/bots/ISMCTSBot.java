@@ -160,10 +160,10 @@ public class ISMCTSBot extends DefaultBWListener {
     	return true;
     }
     
-    public void onPlayerDropped(Player player){
+   /* public void onPlayerDropped(Player player){
     	boolean win = player != game.self();
     	gameover(win);
-    }
+    }*/
     
     public void onEnd(boolean win){
     	
@@ -179,7 +179,15 @@ public class ISMCTSBot extends DefaultBWListener {
      		System.out.println("|    * *      *   *        *    *   *  *  *     *   |");
      		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
      		System.out.println("+---------------------------------------------------+");
-     	} 
+     	} else {
+     		System.out.println("+----------------------------------------------+");
+     		System.out.println("| ****   *****  *****  *****      *      ***** |");
+     		System.out.println("| *   *  *      *      *         * *       *   |");
+     		System.out.println("| *   *  ***    ***    ***      *****      *   |");
+     		System.out.println("| *   *  *      *      *       *     *     *   |");
+     		System.out.println("| ****   *****  *      *****  *       *    *   |");
+     		System.out.println("+----------------------------------------------+");     		
+     	}
     	 // Back propogate
      	ismcts.backPropogate(win);
      	// Save tree

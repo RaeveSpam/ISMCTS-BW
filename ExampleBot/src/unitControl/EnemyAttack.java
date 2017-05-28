@@ -85,7 +85,7 @@ public class EnemyAttack {
 			if(u == null){
 				units.remove(u);
 			}
-			if(u.getType() == UnitType.Resource_Vespene_Geyser){
+			if(u.getType() == UnitType.Resource_Vespene_Geyser || !u.isDetected()){
 				units.remove(u);
 			}
 		}
