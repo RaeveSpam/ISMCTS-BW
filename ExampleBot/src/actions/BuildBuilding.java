@@ -1,5 +1,7 @@
 package actions;
 
+import java.util.Map;
+
 import ISMCTS.Entity;
 import ISMCTS.ISMCTS;
 import bwapi.Game;
@@ -137,8 +139,28 @@ public class BuildBuilding extends BuildAction<Entity> {
 				return false;
 			}
 		}
+		
+		UnitType scType = ISMCTS.entityToType(type);
+		Map<UnitType, Integer> map = scType.requiredUnits();
+		if(map.size() < 1){
+			return true;
+		}
+		
+		for(UnitType u : map.keySet()){
+			boolean found = false;
+			for(Unit myUnit : game.self().getUnits()){
+				if(u == myUnit.getType()){
+					found = true;
+					break;
+				}
+			}
+			if(!found){
+				return false;
+			}
+		}
+		return true;
 		//System.out.println(type + " " + game.self().isUnitAvailable(type));
-		return game.self().isUnitAvailable(ISMCTS.entityToType(type));
+		//return game.self().isUnitAvailable(ISMCTS.entityToType(type));
 		//return hasBuilder() && isBuildTileValid();
 	}
 	
