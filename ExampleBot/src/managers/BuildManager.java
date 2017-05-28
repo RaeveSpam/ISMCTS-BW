@@ -23,6 +23,7 @@ public class BuildManager implements Manager {
 	Game game;
 	Builder builder;
 	Builder pylonBuilder;
+	int numWorkers;
 	int timeOut = 100;
 	
 	private int projectedSupply;
@@ -36,18 +37,32 @@ public class BuildManager implements Manager {
 		 activeBuilds = new ArrayList<BuildBuilding>();
 		 unitsAndUpgrades = new ArrayList<BuildAction>();
 		 projectedSupply = 0;
+		 numWorkers = 0;
 		 count = 0;
+		 
+	}
+	
+	private void countWorkers(){
+		numWorkers = 0;
+		for(Unit myUnit : game.self().getUnits()){
+			if(myUnit.getType() == UnitType.Protoss_Probe){
+				numWorkers++;
+			}
+		}
 	}
 	
 	private void manageWorkersAndBases(){
 		// Find and assign idle workers
+		//numWorkers = 0;
 		List<Unit> units = game.self().getUnits();
 		//System.out.println(units.size() + " units found");
 		for(Unit myUnit : units){
-			if(myUnit.getType() == UnitType.Protoss_Probe && ( 	
-					myUnit.getOrder() == Order.None || 
-					myUnit.getOrder() == Order.Nothing ||
-					myUnit.getOrder() == Order.PlayerGuard)){
+			if(myUnit.getType() == UnitType.Protoss_Probe){
+				//numWorkers++;
+			} 
+			if( myUnit.getOrder() == Order.None || 
+				myUnit.getOrder() == Order.Nothing ||
+				myUnit.getOrder() == Order.PlayerGuard){
 				assignIdleWorker(myUnit);
 			} else if(myUnit.getType() == UnitType.Protoss_Nexus){
 				manageBase(myUnit);
@@ -100,7 +115,7 @@ public class BuildManager implements Manager {
 				}
 			}
 		}
-		if(workers < resources*3 && nexus.getTrainingQueue().size() < 1 && game.self().supplyUsed() < game.self().supplyTotal() && canAfford(UnitType.Protoss_Probe)){
+		if(numWorkers < 70 && workers < resources*3 && nexus.getTrainingQueue().size() < 1 && game.self().supplyUsed() < game.self().supplyTotal() && canAfford(UnitType.Protoss_Probe)){
 			nexus.train(UnitType.Protoss_Probe);
 		}
 	}
