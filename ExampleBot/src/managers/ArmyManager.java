@@ -196,6 +196,9 @@ public class ArmyManager implements Manager {
 	public void onFrame() {
 		// TODO Auto-generated method stub
 		if(count % 15 == 0){
+			if(isAttacking){
+				attack(enemyMain);
+			}
 			ownedRegions = new ArrayList<Region>();
 			for(Unit u : game.self().getUnits()){
 				if(u.getType() == UnitType.Protoss_Nexus){
