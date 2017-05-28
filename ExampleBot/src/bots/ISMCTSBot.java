@@ -146,11 +146,21 @@ public class ISMCTSBot extends DefaultBWListener {
     }
     
     public void onEnd(boolean win){
+    	if(win){
+    		System.out.println("+---------------------------------------------------+");
+    		System.out.println("| *       *  ***   ****  ***** 	 ***   ****	  *	  *	|");
+    		System.out.println("|  *     *    *   *   	   *    *	*  *   *   * *	|");
+    		System.out.println("|   *   *     *   *        *    *   *  ****   	*   |");
+    		System.out.println("|    * *      *   *        *    *   *  *  *   	*   |");
+    		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
+    		System.out.println("+---------------------------------------------------+");
+    	}
     	// Back propogate
     	ismcts.backPropogate(win);
     	// Save tree
     	Persistence.saveTree(ismcts.getRoot());
     	tree = Persistence.loadTree(); 	
+    	
     }
     
     
