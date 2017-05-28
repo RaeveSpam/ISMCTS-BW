@@ -76,10 +76,12 @@ public class ISMCTSBot extends DefaultBWListener {
     	timeoutCount++;
     	if(timeoutCount > 50000 && self.supplyUsed() < 200){
     		game.leaveGame();
+    		gameover(false);
     	}
     	// equivalent to 30 minutes 
     	if(timeoutCount > 54000){
     		game.leaveGame();
+    		gameover(false);
     	}
     	
     	
@@ -167,14 +169,16 @@ public class ISMCTSBot extends DefaultBWListener {
     		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
     		System.out.println("+---------------------------------------------------+");
     	}
-    	// Back propogate
-    	ismcts.backPropogate(win);
-    	// Save tree
-    	Persistence.saveTree(ismcts.getRoot());
-    	tree = Persistence.loadTree(); 	
+    	gameover(win);	
     	
     }
-    
+     private void gameover(boolean win){
+    	// Back propogate
+     	ismcts.backPropogate(win);
+     	// Save tree
+     	Persistence.saveTree(ismcts.getRoot());
+     	tree = Persistence.loadTree(); 	
+     }
     
     public void manageAttack(){
     	if(self.supplyUsed() > 260){
