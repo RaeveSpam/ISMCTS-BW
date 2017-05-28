@@ -71,6 +71,7 @@ public class ISMCTS {
 	
 	public void reset(){
 		currentNode = rootNode;
+		currentEdge = null;
 	}
 	
 	public Node getRoot(){

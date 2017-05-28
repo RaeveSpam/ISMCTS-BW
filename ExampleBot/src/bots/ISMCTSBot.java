@@ -176,6 +176,7 @@ public class ISMCTSBot extends DefaultBWListener {
     	// Back propogate
      	ismcts.backPropogate(win);
      	// Save tree
+     	
      	Persistence.saveTree(ismcts.getRoot());
      	ismcts.reset();
      }
