@@ -191,7 +191,7 @@ public class BuildManager implements Manager {
 				if(canAfford(ba)){
 					if(ba.isBuilding){
 						boolean startBuilding = build((BuildBuilding)ba);
-						System.out.println(startBuilding);
+						//System.out.println(startBuilding);
 						if(startBuilding){;
 							activeBuilds.add((BuildBuilding)buildQueue.pop());
 						} else {
@@ -276,6 +276,7 @@ public class BuildManager implements Manager {
 			if(probe != null){
 				ba.assignBuilder(probe);
 			} else {
+				System.out.println("No Probe");
 				return false;
 			}
 		}
@@ -302,6 +303,7 @@ public class BuildManager implements Manager {
 				ba.buildTile = pos;
 			} else {
 				//buildPylon();
+				System.out.println("No buildTile");
 				return false;
 			}
 		}

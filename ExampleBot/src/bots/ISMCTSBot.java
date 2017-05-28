@@ -105,7 +105,7 @@ public class ISMCTSBot extends DefaultBWListener {
     	count--;
 
     	// 25 minutes passed and sub 50 supply
-    	if(timeoutCount > 45000 && self.supplyUsed() > 100){
+    	if(timeoutCount > 45000 && self.supplyUsed() < 100){
     		game.leaveGame();
     	}
     	// equivalent to 30 minutes 
@@ -156,8 +156,8 @@ public class ISMCTSBot extends DefaultBWListener {
     public void onEnd(boolean win){
     	if(win){
     		System.out.println("+---------------------------------------------------+");
-    		System.out.println("| *       *  ***   ****  ***** 	 ***   ****	  *	  * |");
-    		System.out.println("|  *     *    *   *   	   *    *	*  *   *   * *  |");
+    		System.out.println("| *       *  ***   ****  ***** 	 ***   ****   *   * |");
+    		System.out.println("|  *     *    *   *        *    *   *  *   *   * *  |");
     		System.out.println("|   *   *     *   *        *    *   *  ****     *   |");
     		System.out.println("|    * *      *   *        *    *   *  *  *     *   |");
     		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
