@@ -1,10 +1,13 @@
 package managers;
 
 import bwapi.Unit;
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
 import bwapi.UnitType;
 import bwapi.Unitset;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +47,7 @@ public class ArmyManager implements Manager {
 	private int scoutID;
 	
 	private HashSet<EnemyBuilding> enemyBuildings;
-    private List<EnemyUnit> enemyUnits;
+    public ArrayList<EnemyUnit> enemyUnits;
     private EnemyBuilding target;
     private BaseLocation enemyMain;
 	
@@ -58,7 +61,8 @@ public class ArmyManager implements Manager {
 		ownedRegions = new ArrayList<Region>();
 		stagingArea = null;
 		
-		
+		enemyBuildings = new HashSet<EnemyBuilding>();
+		enemyUnits = new ArrayList<EnemyUnit>();
 		idleUnits = new ArrayList<UnitGroup>();
 		activeUnits = new ArrayList<UnitGroup>();
 		enemyAttack = null;
@@ -73,16 +77,28 @@ public class ArmyManager implements Manager {
     		if(!u.getType().isBuilding() && !u.getType().isWorker() && u.getType() != UnitType.Unknown){
     			boolean found = false;
     			for(EnemyUnit eu : current){
-    				if(eu.type == u.getType()){
+    				if(eu.type == ISMCTS.typeToEntity(u.getType())){
     					found = true;
     					eu.number++;
     					break;
     				}
     			}
     			if(!found){
-    				current.add(new EnemyUnit(u.getType()));
+    				current.add(new EnemyUnit(ISMCTS.typeToEntity(u.getType())));
     			}
-    		} 
+    		} else if(u.getType().isBuilding()){
+    			EnemyBuilding newBuilding = new EnemyBuilding(u);
+    			boolean exists = false;
+    			for(EnemyBuilding existing : enemyBuildings){
+    				if(existing.equals(newBuilding)){
+    					exists = true;
+    					break;
+    				}
+    			}
+    			if(!exists){
+    				enemyBuildings.add(newBuilding);
+    			}
+    		}
     	}
     	//game.printf("Current enemy units " + current.size());
     	// Compare to previous knowledge
@@ -132,27 +148,47 @@ public class ArmyManager implements Manager {
 		return isAttacking;
 	}
 	
-	public void attackMoveAll(Position target){
+	public ArrayList<EnemyBuilding> getEnemyBuildings(){
+		updateEnemyUnits();
+		ArrayList<EnemyBuilding> result = new ArrayList<EnemyBuilding>();
+		for(EnemyBuilding b : enemyBuildings){
+			result.add(b);
+		}
 		
-		List<Unit> units = game.self().getUnits();
-		for(int i = count%4; i < units.size(); i+=4){
-			Unit unit = units.get(i);
-			if(	!unit.getType().isBuilding() &&
-				!unit.getType().isWorker() &&
-				unit.getID() != scoutID ){
-				unit.attack(target);
-				if(!unit.getType().canAttack()){
-					unit.move(target);
-				}
-				if(unit.getType() == UnitType.Protoss_Reaver){
-					unit.train(UnitType.Protoss_Scarab);
-				}
-				if(unit.getType() == UnitType.Protoss_Carrier){
-					unit.train(UnitType.Protoss_Interceptor);
-				}
-			} 
-			
-			
+		Comparator<EnemyBuilding> comp = new Comparator<EnemyBuilding>() {
+			//Player self = game.self();
+			public int compare(EnemyBuilding first, EnemyBuilding second){
+				return first.type.compareTo(second.type);
+			}
+		};
+		
+		result.sort(comp);
+		return result;
+	}
+	
+	public void attackMoveAll(Position target){
+		if(target != null) {
+			List<Unit> units = game.self().getUnits();
+			for(int i = count%4; i < units.size(); i+=4){
+				Unit unit = units.get(i);
+				if(	!unit.getType().isBuilding() &&
+					!unit.getType().isWorker() &&
+					unit.getID() != scoutID && 
+					unit.exists()){
+					unit.attack(target);
+					if(!unit.getType().canAttack()){
+						unit.move(target);
+					}
+					if(unit.getType() == UnitType.Protoss_Reaver){
+						unit.train(UnitType.Protoss_Scarab);
+					}
+					if(unit.getType() == UnitType.Protoss_Carrier){
+						unit.train(UnitType.Protoss_Interceptor);
+					}
+				} 
+				
+				
+			}
 		}
 	}
 	
@@ -204,12 +240,13 @@ public class ArmyManager implements Manager {
 	 * Simple Attack
 	 */
 	public void attack(BaseLocation enemyMainBase){
+		isAttacking = true;
 		enemyMain = enemyMainBase;
 		if(enemyBuildings.size() < 1){
 			attack(BWTA.getRegion(enemyMainBase.getTilePosition()));
 		} else {
 			for(EnemyBuilding b : enemyBuildings){
-				if(target == null || b.type.mineralPrice() > target.type.mineralPrice()){
+				if(target == null || ISMCTS.entityToType(b.type).mineralPrice() > ISMCTS.entityToType(target.type).mineralPrice()){
 					target = b;
 				}
 			}
@@ -224,9 +261,7 @@ public class ArmyManager implements Manager {
 	/**
 	 * Simple scout
 	 */
-	public void scout(){
-		
-	}
+
 	
 	public void scout(Position position){
 		getScout().move(position);
@@ -484,7 +519,7 @@ public class ArmyManager implements Manager {
 	private void deadEnemyUnit(UnitType type){
     	boolean found = false;
 		for(EnemyUnit eu : enemyUnits){
-			if(eu.type == type){
+			if(eu.type == ISMCTS.typeToEntity(type)){
 				found = true;
 				eu.number--;
 				break;

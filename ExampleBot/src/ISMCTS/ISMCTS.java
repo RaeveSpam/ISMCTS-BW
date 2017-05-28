@@ -15,6 +15,8 @@ import bwapi.Game;
 import bwapi.Unit;
 import bwapi.UnitType;
 import bwapi.UpgradeType;
+import stateInformation.EnemyBuilding;
+import stateInformation.EnemyUnit;
 import stateInformation.Memory;
 import bwta.BWTA;
 import bwta.BaseLocation;
@@ -31,7 +33,7 @@ public class ISMCTS {
 	
 	private transient ArrayList<Node> visitedNodes;
 	
-	private transient Memory currentKnowledge;
+	//private transient Memory currentKnowledge;
 	
 	private transient List<BaseLocation> baseLocations;
 
@@ -75,33 +77,35 @@ public class ISMCTS {
 		return rootNode;
 	}
 	
-	public void setEnemyInformation(Memory memory){
-		currentKnowledge = memory;
-	}
+
 	
-	private InformationSet captureInformationSet(Game game, Memory memory, int targetBase){
+	private InformationSet captureInformationSet(Game game, ArrayList<EnemyUnit> enemyArmy, ArrayList<EnemyBuilding> enemyBuildings){
 		//System.out.println("capture");
 		InformationSet result = new InformationSet();
 		result.collectInformation(game, baseLocations);
-		result.setMemory(memory);
+		result.enemyBuildings = enemyBuildings;
+		result.enemyArmy = enemyArmy;
+		//result.setMemory(memory);
 		//result.setAttackTarget(targetBase);
 		//System.out.println("done");
 		//System.out.println(result.getBuildings());
+		//System.out.println("InformationSet build");
 		return result;
 	}
 	
 
 	
-	public Action step(Game game, Memory memory, int targetBase){
+	public Action step(Game game, ArrayList<EnemyUnit> enemyArmy, ArrayList<EnemyBuilding> enemyBuildings){
 		// build current information set
 		// compare with currentEdge.children
 		//System.out.println("step");
-		currentNode = getCurrentNode(game, memory, targetBase);
+		currentNode = getCurrentNode(game, enemyArmy, enemyBuildings);
 		//System.out.println("current set");
 		// select / expand		
 		Action result = selection(game);
 		visitedNodes.add(currentNode);
 		visitedEdges.add(currentEdge);
+		System.out.println(currentNode.informationSet.enemyArmy);
 		return result; 
 	}
 		
@@ -110,13 +114,13 @@ public class ISMCTS {
 	 * @return
 	 */
 	
-	private Node getCurrentNode(Game game, Memory memory, int targetBase){
+	private Node getCurrentNode(Game game, ArrayList<EnemyUnit> enemyArmy, ArrayList<EnemyBuilding> enemyBuildings){
 		//System.out.println("getCurrentNode");
 		if(currentEdge == null){
 			return rootNode;
 		}
 
-		return currentEdge.getNodeFromSet(captureInformationSet(game, memory, targetBase));
+		return currentEdge.getNodeFromSet(captureInformationSet(game, enemyArmy, enemyBuildings));
 	}
 	
 	private Action selection(Game game){

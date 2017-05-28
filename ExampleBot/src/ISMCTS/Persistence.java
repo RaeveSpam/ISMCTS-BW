@@ -35,7 +35,6 @@ public class Persistence {
 			XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(logFileName)));
 			name = (String)decoder.readObject();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.out.println("No Log");
 			return null;
@@ -46,7 +45,6 @@ public class Persistence {
 			XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(name)));
 			result = (Node)decoder.readObject();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Save file not found");
 			//e.printStackTrace();
 			return null;
@@ -57,7 +55,7 @@ public class Persistence {
 	public static boolean saveTree(Node tree){
 		String name = getHostName() + getDate();
 		name = name + tree.getName();
-		System.out.println(name);
+		//System.out.println(name);
 		try {
 			XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(name)));
 			encoder.writeObject(tree);
@@ -77,6 +75,7 @@ public class Persistence {
 			e.printStackTrace();
 			return false;
 		}
+		System.out.println(name + " saved");
 		return true;
 	}
 	

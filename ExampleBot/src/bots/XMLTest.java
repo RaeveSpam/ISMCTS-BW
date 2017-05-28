@@ -12,6 +12,7 @@ import java.util.Random;
 import ISMCTS.Edge;
 import ISMCTS.Entity;
 import ISMCTS.ISMCTS;
+import ISMCTS.InformationSet;
 import ISMCTS.Node;
 import ISMCTS.Persistence;
 import actions.Action;
@@ -21,6 +22,7 @@ import actions.BuildUnit;
 import actions.Withdraw;
 import bwapi.UnitType;
 import stateInformation.EnemyBuilding;
+import stateInformation.EnemyUnit;
 
 import java.beans.XMLDecoder;
 
@@ -35,15 +37,18 @@ public class XMLTest {
 		//UnitType bla = UnitType.Protoss_Arbiter;
 		//System.out.println(bla);
 		Node n0 = new Node();
+		n0.informationSet = new InformationSet();
+		n0.informationSet.enemyArmy.add(new EnemyUnit(Entity.Zealot));
 		n0.suckIt = "node0";
 		Action a0 = new Withdraw();
 		Edge e0 = new Edge(a0);
 		e0.fuck = "edge0";
 		Node n1 = new Node();
 		n1.suckIt = "node1";
+		n1.informationSet = new InformationSet();
 		e0.children.add(n1);
 		n0.children.add(e0);
-		System.out.println(n0.children.get(0).children.size());
+		//System.out.println(n0.children.get(0).children.size());
 		
 		//BuildAction<Entity> test = new BuildBuilding();
 		
@@ -63,6 +68,8 @@ public class XMLTest {
 			return;
 		}
 		
+		
+		
 		Node test = new Node();
 		// Load Object
 		try {
@@ -73,7 +80,13 @@ public class XMLTest {
 			e.printStackTrace();
 			return;
 		}
-		System.out.println(test.children.get(0).children.size());
+		System.out.println(test.informationSet.enemyArmy.get(0).type);
+		
+		
+		
+		
+		
+		//System.out.println(test.informationSet.enemyUnits);
 		//System.out.println(test.type);
 	}
 

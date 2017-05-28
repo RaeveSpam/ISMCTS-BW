@@ -83,18 +83,24 @@ public class ISMCTSBot extends DefaultBWListener {
     		
     		count = 450;
     		System.out.println("*      *");
-    		Memory memory = buildMemory();
+    		//Memory memory = buildMemory();
     		//System.out.println("*   .............   *");
         	int targetBase = -1;
         	//System.out.println("attack " + armyManager.isAttacking());
+        	/*
         	if(armyManager.isAttacking()){
         		//System.out.println("attack " + armyManager.isAttacking());
         		targetBase = getBaseLocationIndex(armyManager.getTarget());
-        	}
+        	}*/
         	//System.out.println(targetBase);
-        	//System.out.println("*      ISMCTS       *");
-    		performAction(ismcts.step(game, memory, targetBase));
-    		
+        	//System.out.println("Army " + armyManager.enemyUnits);
+        	//System.out.println("buildings " + armyManager.getEnemyBuildings());
+    		performAction(ismcts.step(game, armyManager.enemyUnits, armyManager.getEnemyBuildings()));
+    		if(shouldExpand()){
+    			System.out.println("Expand");
+    			expansion();
+    		}
+    		manageAttack();
 		}
     	count--;
     	//System.out.println("*********************");
@@ -106,9 +112,6 @@ public class ISMCTSBot extends DefaultBWListener {
     	switch (action.move) {
     		case Build:
     			if(((BuildAction)action).isBuilding){
-    				if(((BuildBuilding)action).type == Entity.Nexus){
-    					buildManager.addExpansion(expansion().getTilePosition());
-    				}
     				buildManager.addBuild((BuildAction)action);
     			} else {
     				//System.out.println("build unit");
@@ -122,16 +125,16 @@ public class ISMCTSBot extends DefaultBWListener {
     			buildManager.addBuild((BuildUpgrade)action);
     			break;
     		case Attack: 
-    			armyManager.attack(getBaseLocation(action.baseLocation));
+    			//armyManager.attack(getBaseLocation(action.baseLocation));
     			break;
     		case Withdraw: 
-    			armyManager.withDraw();
+    			//armyManager.withDraw();
     			break;
     		case Expand:
     		case buildWorkers:
     		case stopBuildingWorkers:
     		case scout: {
-    			armyManager.scout(getBaseLocation(action.baseLocation).getPosition());
+    			//armyManager.scout(getBaseLocation(action.baseLocation).getPosition());
     		}    			
     		case none:
     			return true;
@@ -150,12 +153,23 @@ public class ISMCTSBot extends DefaultBWListener {
     	tree = Persistence.loadTree(); 	
     }
     
-    public BaseLocation expansion(){
+    
+    public void manageAttack(){
+    	if(self.supplyTotal() > 300){
+    		armyManager.attack(baseLocations.get(baseLocations.size()-1));
+    	} else if(self.supplyTotal() < 200){
+    		armyManager.withDraw();
+    	}
+    }
+    
+    public void expansion(){
 
     	BaseLocation result = null;
     	double dist = Double.MAX_VALUE;
     	
-    	for(BaseLocation b : baseLocations){
+    	//System.out.println(baseLocations.get(0).getTilePosition());
+    	
+    	for(BaseLocation b : BWTA.getBaseLocations()){
     		boolean isNotOccupied = game.canBuildHere(b.getTilePosition(), UnitType.Protoss_Nexus);
     		double newDist = BWTA.getGroundDistance(baseLocations.get(0).getTilePosition(), b.getTilePosition());
     		if(isNotOccupied && (result == null || dist > newDist)){
@@ -163,24 +177,46 @@ public class ISMCTSBot extends DefaultBWListener {
     			dist = newDist;
     		}
     	}
-    	
-    	return result;
+    	if(result != null) {
+    		//System.out.println(result.getTilePosition());
+    		buildManager.addExpansion(result.getTilePosition());
+    	}
+    }
+    
+    public boolean shouldExpand(){
+    	int bases = 0;
+    	int workers = 0;
+    	int resources = 0;
+    	for(Unit myUnit : self.getUnits()){
+    		if(myUnit.getType().isWorker()){
+    			workers++;
+    		} else if(myUnit.getType() == UnitType.Protoss_Nexus){
+    			bases++;
+    			for(Unit res : myUnit.getUnitsInRadius(200)){
+    				if(res.getType().isMineralField()){
+    					resources++;
+    				}
+    			}
+    		}
+    	}
+    	//System.out.println(workers + " > " + resources + " * 2");
+    	return (workers > resources * 2.2);
     }
     
     public Memory buildMemory(){
     	Memory result = new Memory();
-    	//game.printf(enemyBuildings.size() + " Enemy buildings");
+    /*	//game.printf(enemyBuildings.size() + " Enemy buildings");
     	//game.printf(enemyUnits.size() + " Enemy units");
     	for(EnemyBuilding e : enemyBuildings){
-    		result.enemyBuildings.add(ISMCTS.typeToEntity(e.type));
-    		if(e.type == UnitType.Protoss_Nexus){
+    	//	result.enemyBuildings.add(ISMCTS.typeToEntity(e.type));
+    	//	if(e.type == UnitType.Protoss_Nexus){
     			result.enemyBases.add(getBaseLocationIndex(BWTA.getNearestBaseLocation(e.position.toPosition())));
     		}
     	}
     	
     	for(EnemyUnit e : enemyUnits){
     		result.enemyArmy.add(ISMCTS.typeToEntity(e.type));
-    	}
+    	}*/
     	return result;
     }
     
@@ -192,14 +228,14 @@ public class ISMCTSBot extends DefaultBWListener {
     		if(!u.getType().isBuilding() && !u.getType().isWorker() && u.getType() != UnitType.Unknown){
     			boolean found = false;
     			for(EnemyUnit eu : current){
-    				if(eu.type == u.getType()){
+    				if(eu.type == ISMCTS.typeToEntity(u.getType())){
     					found = true;
     					eu.number++;
     					break;
     				}
     			}
     			if(!found){
-    				current.add(new EnemyUnit(u.getType()));
+    				current.add(new EnemyUnit(ISMCTS.typeToEntity(u.getType())));
     			}
     		}
     	}
@@ -232,7 +268,7 @@ public class ISMCTSBot extends DefaultBWListener {
     private void deadEnemyUnit(UnitType type){
     	boolean found = false;
 		for(EnemyUnit eu : enemyUnits){
-			if(eu.type == type){
+			if(eu.type == ISMCTS.typeToEntity(type)){
 				found = true;
 				eu.number--;
 				break;
@@ -268,7 +304,7 @@ public class ISMCTSBot extends DefaultBWListener {
     		if(!game.isVisible(b.getTilePosition())){
     			start = b;
     		} else {
-    			EnemyBuilding eb = new EnemyBuilding(UnitType.Protoss_Nexus);
+    			EnemyBuilding eb = new EnemyBuilding(Entity.Nexus);
     			eb.position = b.getTilePosition();
     			enemyBuildings.add(eb);
     		}

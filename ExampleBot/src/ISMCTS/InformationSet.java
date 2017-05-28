@@ -10,24 +10,28 @@ import bwapi.Unit;
 import bwapi.UnitType;
 import bwta.BWTA;
 import bwta.BaseLocation;
+import stateInformation.EnemyBuilding;
+import stateInformation.EnemyUnit;
 import stateInformation.Memory;
 
 public class InformationSet {
 	
 	//private ArrayList<Action> enemyActions;
+	public ArrayList<EnemyUnit> enemyArmy;
 	public ArrayList<Entity> buildings;
 	public ArrayList<Integer> bases;
-	public ArrayList<Entity> army;
+	public ArrayList<EnemyUnit> army;
 	public ArrayList<Tech> upgrades;
-	//public int supply;
-	//public Memory memory;
-	//public int attacking;
-
+	public ArrayList<EnemyBuilding> enemyBuildings;
+	
+	
 	public InformationSet(){
 		buildings = new ArrayList<Entity>();
 		bases = new ArrayList<Integer>();
-		army = new ArrayList<Entity>();
+		army = new ArrayList<EnemyUnit>();
 		upgrades = new ArrayList<Tech>();
+		enemyArmy = new ArrayList<EnemyUnit>();
+		enemyBuildings = new ArrayList<EnemyBuilding>();
 	}
 	
 	public InformationSet(Game game, Memory memory, List<BaseLocation> baseLocations){
@@ -59,7 +63,17 @@ public class InformationSet {
 				}
 				buildings.add(ISMCTS.typeToEntity(u.getType()));	
 			} else if(!u.getType().isWorker() && u.getType() != UnitType.Protoss_Scarab && u.getType() != UnitType.Protoss_Interceptor){
-				army.add(ISMCTS.typeToEntity(u.getType()));
+				boolean exists = false;
+				for(EnemyUnit myUnit : army){
+					if(myUnit.type == ISMCTS.typeToEntity(u.getType())){
+						myUnit.number++;
+						exists = true;
+						break;
+					}
+				}
+				if(!exists){
+					army.add(new EnemyUnit(ISMCTS.typeToEntity(u.getType())));
+				}
 			}
 		}
 		//supply = game.self().supplyUsed();
@@ -83,7 +97,7 @@ public class InformationSet {
 		return upgrades;
 	}
 	
-	public ArrayList<Entity> getArmy(){
+	public ArrayList<EnemyUnit> getArmy(){
 		return army;
 	}
 	
@@ -92,6 +106,13 @@ public class InformationSet {
 		return buildings;
 	}
 	
+	public void setEnemyBuildings(ArrayList<EnemyBuilding> enemyBuildings){
+		this.enemyBuildings = enemyBuildings;
+	}
+	
+	public void setEnemyArmy(ArrayList<EnemyUnit> enemyArmy){
+		this.enemyArmy = enemyArmy;
+	}
 	/*
 	public void setAttackTarget(int targetBase){
 		//attacking = targetBase;
@@ -133,6 +154,7 @@ public class InformationSet {
 		if(buildings.size() != other.buildings.size()){
 			return false;
 		}
+		
 		buildings.sort(null);
 		other.buildings.sort(null);
 		for(int i = 0; i < buildings.size(); i++){
@@ -140,17 +162,58 @@ public class InformationSet {
 				return false;
 			}
 		}
+		
 		// compare armies
 		if(army.size() != other.army.size()){
 			return false;
 		}
-		army.sort(null);
-		other.army.sort(null);
-		for(int i = 0; i < army.size(); i++){
-			if(army.get(i) != other.army.get(i)){
+		for(EnemyUnit a : army){
+			boolean found = false;
+			for(EnemyUnit b : other.army){
+				if(a.equals(b)){
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
 				return false;
 			}
 		}
+		
+		// compare enemy buildings
+		if(enemyBuildings.size() != other.enemyBuildings.size()){
+			return false;
+		}
+		Comparator<EnemyBuilding> comp = new Comparator<EnemyBuilding>() {
+			//Player self = game.self();
+			public int compare(EnemyBuilding first, EnemyBuilding second){
+				return first.type.compareTo(second.type);
+			}
+		};
+		enemyBuildings.sort(comp);
+		other.enemyBuildings.sort(comp);
+		for(int i = 0; i < enemyBuildings.size(); i++){
+			if(enemyBuildings.get(i).type != other.enemyBuildings.get(i).type){
+				return false;
+			}
+		}
+		if(enemyArmy.size() != other.enemyArmy.size()){
+			return false;
+		}
+		for(EnemyUnit a : enemyArmy){
+			boolean found = false;
+			for(EnemyUnit b : other.enemyArmy){
+				if(a.equals(b)){
+					found = true;
+					break;
+				}
+			}
+			if(!found) {
+				return false;
+			}
+		}
+		// compare enemy units
+		
 		return true;
 	}
 	

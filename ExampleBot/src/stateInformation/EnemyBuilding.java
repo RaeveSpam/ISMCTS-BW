@@ -1,24 +1,28 @@
 package stateInformation;
 
+import bots.ISMCTSBot;
 import bwapi.Game;
 import bwapi.TilePosition;
 import bwapi.Unit;
 import bwapi.UnitType;
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
 
 public class EnemyBuilding {
 	
-	public UnitType type;
+	public Entity type;
 	
-	public TilePosition position;
 	
-	public String name;
+	public transient TilePosition position;
+	
+	public transient String name;
 	
 	public EnemyBuilding(){
 		
 	}
 	
 	public EnemyBuilding(Unit unit){
-		type = unit.getType();
+		type = ISMCTS.typeToEntity(unit.getType());
 		
 		position = unit.getTilePosition();
 	}
@@ -27,8 +31,8 @@ public class EnemyBuilding {
 	 * Used for determinization.
 	 * @param type
 	 */
-	public EnemyBuilding(UnitType type){
-		name = "dickWingle";
+	public EnemyBuilding(Entity type){
+		//name = "dickWingle";
 		this.type = type;
 		position = null;
 	}
@@ -42,7 +46,7 @@ public class EnemyBuilding {
 		if(game.isVisible(position)){
 			// Is visible, check if still is on tile
 			for(Unit unit : game.getUnitsOnTile(position)){
-				if(unit.getType() == type){
+				if(ISMCTS.typeToEntity(unit.getType())  == type){
 					return true;
 				}
 			}

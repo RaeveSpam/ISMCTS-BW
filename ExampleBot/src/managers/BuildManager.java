@@ -127,11 +127,11 @@ public class BuildManager implements Manager {
 	
 	private void manageBuildQueue(){
 		// Check ongoing builds
-		System.out.print("[");
+		//System.out.print("[");
 		for(BuildBuilding a : activeBuilds){
 			a.count++;
 			a.game = game;
-			System.out.print(a.type + ", ");
+			//System.out.print(a.type + ", ");
 			if(a.hasBeenBuilt() || !a.canBeBuilt()){
 				activeBuilds.remove(a);
 			} else if(a.count > timeOut){
@@ -141,7 +141,7 @@ public class BuildManager implements Manager {
 				//break;
 			}
 		}
-		System.out.println("]");
+		//System.out.println("]");
 	//	System.out.println("***********");
 		for(BuildAction a : unitsAndUpgrades){
 			if(a.canBeBuilt()){
@@ -324,6 +324,7 @@ public class BuildManager implements Manager {
 	public void addExpansion(TilePosition pos){
 		BuildBuilding b = new BuildBuilding(game, Entity.Nexus);
 		b.buildTile = pos;
+		buildQueue.add(b);
 		//System.out.println("Expanding (" + b.buildTile.getX() + ", " + b.buildTile.getY() + ")");
 	}
 	

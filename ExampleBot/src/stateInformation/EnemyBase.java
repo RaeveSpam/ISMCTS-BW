@@ -4,6 +4,8 @@ import bwapi.Unit;
 import bwapi.UnitType;
 import bwta.BWTA;
 import bwta.BaseLocation;
+import ISMCTS.Entity;
+import ISMCTS.ISMCTS;
 
 public class EnemyBase extends EnemyBuilding {
 
@@ -16,7 +18,7 @@ public class EnemyBase extends EnemyBuilding {
 	}
 	
 	public EnemyBase(BaseLocation location){
-		type = UnitType.Protoss_Nexus;
+		type = Entity.Nexus;
 		position = location.getTilePosition();
 	}
 	
