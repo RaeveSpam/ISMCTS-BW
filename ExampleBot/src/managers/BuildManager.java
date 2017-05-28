@@ -43,8 +43,9 @@ public class BuildManager implements Manager {
 	}
 	
 	private void countWorkers(){
+		List<Unit> units = game.self().getUnits();
 		numWorkers = 0;
-		for(Unit myUnit : game.self().getUnits()){
+		for(Unit myUnit : units){
 			if(myUnit.getType() == UnitType.Protoss_Probe){
 				numWorkers++;
 			}
@@ -53,20 +54,22 @@ public class BuildManager implements Manager {
 	
 	private void manageWorkersAndBases(){
 		// Find and assign idle workers
-		//numWorkers = 0;
+		
+		countWorkers();
+		
 		List<Unit> units = game.self().getUnits();
-		//System.out.println(units.size() + " units found");
+		System.out.println(units.size() + " units found");
 		for(Unit myUnit : units){
-			if(myUnit.getType() == UnitType.Protoss_Probe){
-				//numWorkers++;
-			} 
-			if( myUnit.getOrder() == Order.None || 
-				myUnit.getOrder() == Order.Nothing ||
-				myUnit.getOrder() == Order.PlayerGuard){
-				assignIdleWorker(myUnit);
-			} else if(myUnit.getType() == UnitType.Protoss_Nexus){
+			if(myUnit.getType() == UnitType.Protoss_Nexus){
+				System.out.println("Manage Base");
 				manageBase(myUnit);
-			}
+			} else
+			if(myUnit.getType() == UnitType.Protoss_Probe && (
+				myUnit.getOrder() == Order.None || 
+				myUnit.getOrder() == Order.Nothing ||
+				myUnit.getOrder() == Order.PlayerGuard)){
+				assignIdleWorker(myUnit);
+			}  
 		}
 	}
 	
@@ -90,7 +93,7 @@ public class BuildManager implements Manager {
 	}
 	
 	private void manageBase(Unit nexus){
-		
+
 		if(nexus.getType() != UnitType.Protoss_Nexus){
 			return;
 		}
@@ -98,6 +101,7 @@ public class BuildManager implements Manager {
 		List<Unit> units = nexus.getUnitsInRadius(200);
 		int workers = 0;
 		int resources = 0;
+
 		for(Unit u : units){
 			if(u.getType() == UnitType.Protoss_Probe){
 				workers++;
@@ -115,6 +119,7 @@ public class BuildManager implements Manager {
 				}
 			}
 		}
+
 		if(numWorkers < 70 && workers < resources*3 && nexus.getTrainingQueue().size() < 1 && game.self().supplyUsed() < game.self().supplyTotal() && canAfford(UnitType.Protoss_Probe)){
 			nexus.train(UnitType.Protoss_Probe);
 		}
