@@ -155,9 +155,9 @@ public class ISMCTSBot extends DefaultBWListener {
     
     
     public void manageAttack(){
-    	if(self.supplyTotal() > 300){
+    	if(self.supplyUsed() > 260){
     		armyManager.attack(baseLocations.get(baseLocations.size()-1));
-    	} else if(self.supplyTotal() < 200){
+    	} else if(self.supplyUsed() < 160){
     		armyManager.withDraw();
     	}
     }
