@@ -17,7 +17,7 @@ import stateInformation.Memory;
 public class InformationSet {
 	
 	//private ArrayList<Action> enemyActions;
-	public ArrayList<EnemyUnit> enemyArmy;
+	public transient ArrayList<EnemyUnit> enemyArmy;
 	public ArrayList<Entity> buildings;
 	public ArrayList<Integer> bases;
 	public ArrayList<EnemyUnit> army;
@@ -197,6 +197,9 @@ public class InformationSet {
 				return false;
 			}
 		}
+		
+		// compare enemy units
+		/*
 		if(enemyArmy.size() != other.enemyArmy.size()){
 			return false;
 		}
@@ -211,8 +214,8 @@ public class InformationSet {
 			if(!found) {
 				return false;
 			}
-		}
-		// compare enemy units
+		}*/
+		
 		
 		return true;
 	}
