@@ -36,6 +36,7 @@ public class ISMCTSBot extends DefaultBWListener {
     private List<BaseLocation> baseLocations;
     private int count;
     private Node tree;
+    private int timeoutCount;
     
     public ISMCTSBot(){
     	tree = Persistence.loadTree();
@@ -54,6 +55,7 @@ public class ISMCTSBot extends DefaultBWListener {
     public void onStart(){
     	count = 0;
     	game = mirror.getGame();
+    	timeoutCount = 0;
     	self = game.self();
     	BWTA.readMap();
     	BWTA.analyze();
@@ -75,20 +77,10 @@ public class ISMCTSBot extends DefaultBWListener {
     	//System.out.println("*   Army  Manager   *");
     	armyManager.onFrame();
     	//updateEnemyUnits();
-    	
+    	timeoutCount++;
     	// ISMCTS
     	
-    	if(count < 1) {
-    		
-    		Map<UnitType, Integer> map = UnitType.Protoss_Carrier.requiredUnits();
-    		if(map.size() < 1){
-    			//return true;
-    		}
-    		System.out.println(map.keySet());
-    		for(UnitType u : map.keySet()){
-    			
-    		}
-    		
+    	if(count < 1) {    		
     		count = 450;
     		System.out.println("*      *");
     		//Memory memory = buildMemory();
@@ -111,7 +103,11 @@ public class ISMCTSBot extends DefaultBWListener {
     		manageAttack();
 		}
     	count--;
-    	//System.out.println("*********************");
+
+    	// equivalent to 30 minutes 
+    	if(timeoutCount > 54000){
+    		game.leaveGame();
+    	}
     }
     
     public boolean performAction(Action action){

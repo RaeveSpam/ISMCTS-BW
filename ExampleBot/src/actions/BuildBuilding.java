@@ -135,6 +135,9 @@ public class BuildBuilding extends BuildAction<Entity> {
 	@Override
 	public boolean canBeBuilt() {
 		if(ISMCTS.entityToType(type) == UnitType.Protoss_Assimilator){
+			if(buildTile == null){
+				return false;
+			}
 			if(!game.canBuildHere(buildTile, ISMCTS.entityToType(type))){
 				return false;
 			}
