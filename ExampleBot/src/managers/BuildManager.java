@@ -181,7 +181,7 @@ public class BuildManager implements Manager {
 			BuildAction ba = buildQueue.peek();
 			ba.game = game;	
 			if(!ba.canBeBuilt()){ // doesn't have requirements, remove.
-				System.out.println("Can't build pop " + ba.type);
+				//System.out.println("Can't build pop " + ba.type);
 				buildQueue.pop();
 				/*if(buildQueue.size() > 2){
 					break;
@@ -191,7 +191,7 @@ public class BuildManager implements Manager {
 				if(canAfford(ba)){
 					if(ba.isBuilding){
 						boolean startBuilding = build((BuildBuilding)ba);
-						System.out.println(ba.type);
+						//System.out.println(ba.type);
 						if(startBuilding){;
 							activeBuilds.add((BuildBuilding)buildQueue.pop());
 						} else {
@@ -276,7 +276,7 @@ public class BuildManager implements Manager {
 			if(probe != null){
 				ba.assignBuilder(probe);
 			} else {
-				System.out.println("No Probe");
+				//System.out.println("No Probe");
 				return false;
 			}
 		}
@@ -312,7 +312,7 @@ public class BuildManager implements Manager {
 				ba.buildTile = pos;
 			} else {
 				//buildPylon();
-				System.out.println("No buildTile");
+				//System.out.println("No buildTile");
 				return false;
 			}
 		}

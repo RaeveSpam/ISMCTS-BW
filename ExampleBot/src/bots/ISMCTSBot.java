@@ -70,6 +70,7 @@ public class ISMCTSBot extends DefaultBWListener {
  		//System.out.println(getBaseLocationSize());
  		
  		ismcts = new ISMCTS(tree, game, baseLocations);
+ 		System.out.println(ismcts.getRoot().visits);
     }
     
     public void onFrame(){
@@ -109,7 +110,7 @@ public class ISMCTSBot extends DefaultBWListener {
         	//System.out.println("buildings " + armyManager.getEnemyBuildings());
     		performAction(ismcts.step(game, armyManager.enemyUnits, armyManager.getEnemyBuildings()));
     		if(shouldExpand()){
-    			System.out.println("Expand");
+    			//System.out.println("Expand");
     			expansion();
     		}
     		manageAttack();
@@ -121,8 +122,8 @@ public class ISMCTSBot extends DefaultBWListener {
     }
     
     public boolean performAction(Action action){
-    	System.out.print("DO ");
-    	action.print();
+    	//System.out.print("DO ");
+    //	action.print();
     	switch (action.move) {
     		case Build:
     			if(((BuildAction)action).isBuilding){
@@ -159,25 +160,31 @@ public class ISMCTSBot extends DefaultBWListener {
     	return true;
     }
     
+    public void onPlayerDropped(Player player){
+    	boolean win = player != game.self();
+    	gameover(win);
+    }
+    
     public void onEnd(boolean win){
-    	if(win){
-    		System.out.println("+---------------------------------------------------+");
-    		System.out.println("| *       *  ***   ****  ***** 	 ***   ****   *   * |");
-    		System.out.println("|  *     *    *   *        *    *   *  *   *   * *  |");
-    		System.out.println("|   *   *     *   *        *    *   *  ****     *   |");
-    		System.out.println("|    * *      *   *        *    *   *  *  *     *   |");
-    		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
-    		System.out.println("+---------------------------------------------------+");
-    	}
+    	
     	gameover(win);	
     	
     }
      private void gameover(boolean win){
-    	// Back propogate
+    	 if(win){
+     		System.out.println("+---------------------------------------------------+");
+     		System.out.println("| *       *  ***   ****  ***** 	 ***   ****   *   * |");
+     		System.out.println("|  *     *    *   *        *    *   *  *   *   * *  |");
+     		System.out.println("|   *   *     *   *        *    *   *  ****     *   |");
+     		System.out.println("|    * *      *   *        *    *   *  *  *     *   |");
+     		System.out.println("|     *      ***   ****    *     ***   *   *    *   |");
+     		System.out.println("+---------------------------------------------------+");
+     	} 
+    	 // Back propogate
      	ismcts.backPropogate(win);
      	// Save tree
      	
-     	Persistence.saveTree(ismcts.getRoot());
+     	//Persistence.saveTree(ismcts.getRoot());
      	tree = ismcts.getRoot();
      }
     

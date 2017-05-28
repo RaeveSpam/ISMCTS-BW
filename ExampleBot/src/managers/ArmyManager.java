@@ -71,7 +71,7 @@ public class ArmyManager implements Manager {
 	}
 	
 	public void updateEnemyUnits(){
-    	System.out.println("Update enemies");
+    	//System.out.println("Update enemies");
 		// Current information on enemy units
 		
     	List<EnemyUnit> current = new ArrayList<EnemyUnit>();
@@ -278,7 +278,7 @@ public class ArmyManager implements Manager {
 			}
 		}
 		updateEnemyUnits();
-		System.out.println("ATTACK");
+		//System.out.println("ATTACK");
 		//isAttacking = true;
 		enemyMain = enemyMainBase;
 		//System.out.println(enemyBuildings);
