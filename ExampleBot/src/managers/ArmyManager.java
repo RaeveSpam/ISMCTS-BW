@@ -520,6 +520,10 @@ public class ArmyManager implements Manager {
 
 	@Override
 	public void onUnitDiscover(Unit unit) {
+		if(unit.getPlayer() == game.enemy() && unit.getType().isBuilding()){
+			enemyBuildings.add(new EnemyBuilding(unit));
+		}
+		
 		// TODO Auto-generated method stub
 		defender.onUnitDiscover(unit);
 		scout.onUnitDiscover(unit);

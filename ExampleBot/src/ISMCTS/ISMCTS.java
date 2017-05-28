@@ -105,7 +105,7 @@ public class ISMCTS {
 		Action result = selection(game);
 		visitedNodes.add(currentNode);
 		visitedEdges.add(currentEdge);
-		System.out.println(currentNode.informationSet.enemyArmy);
+	//	System.out.println(currentNode.informationSet.enemyArmy);
 		return result; 
 	}
 		
