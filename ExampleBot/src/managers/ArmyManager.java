@@ -70,11 +70,13 @@ public class ArmyManager implements Manager {
 	}
 	
 	public void updateEnemyUnits(){
-    	// Current information on enemy units
+    	System.out.println("Update enemies");
+		// Current information on enemy units
+		
     	List<EnemyUnit> current = new ArrayList<EnemyUnit>();
     	
     	for(Unit u : game.enemy().getUnits()){
-    		if(!u.getType().isBuilding() && !u.getType().isWorker() && u.getType() != UnitType.Unknown){
+    		/*if(!u.getType().isBuilding() && !u.getType().isWorker() && u.getType() != UnitType.Unknown){
     			boolean found = false;
     			for(EnemyUnit eu : current){
     				if(eu.type == ISMCTS.typeToEntity(u.getType())){
@@ -86,8 +88,9 @@ public class ArmyManager implements Manager {
     			if(!found){
     				current.add(new EnemyUnit(ISMCTS.typeToEntity(u.getType())));
     			}
-    		} else if(u.getType().isBuilding()){
-    			EnemyBuilding newBuilding = new EnemyBuilding(u);
+    		} else*/ if(u.getType().isBuilding()){
+    			enemyBuildings.add(new EnemyBuilding(u));
+    		/*	EnemyBuilding newBuilding = new EnemyBuilding(u);
     			boolean exists = false;
     			for(EnemyBuilding existing : enemyBuildings){
     				if(existing.equals(newBuilding)){
@@ -97,12 +100,12 @@ public class ArmyManager implements Manager {
     			}
     			if(!exists){
     				enemyBuildings.add(newBuilding);
-    			}
+    			}*/
     		}
     	}
     	//game.printf("Current enemy units " + current.size());
     	// Compare to previous knowledge
-    	for(EnemyUnit c : current){
+    /*	for(EnemyUnit c : current){
     		boolean found = false;
     		for(EnemyUnit o : enemyUnits){
     			//game.printf(o.type.toString());
@@ -117,12 +120,12 @@ public class ArmyManager implements Manager {
     		if(!found){
     			enemyUnits.add(c);
     		}
-    	}
-    	for(EnemyUnit eu : enemyUnits){
+    	} */
+    	/*for(EnemyUnit eu : enemyUnits){
     		if(eu.number < 1){
     			enemyUnits.remove(eu);
     		}
-    	}
+    	}*/
     	for(EnemyBuilding b : enemyBuildings){
     		if(!b.stillExists(game)){
     			enemyBuildings.remove(b);
@@ -134,6 +137,8 @@ public class ArmyManager implements Manager {
     	
     	
     }
+	
+	
 	
 	@Override
 	public void onStart() {
@@ -244,9 +249,12 @@ public class ArmyManager implements Manager {
 	 * Simple Attack
 	 */
 	public void attack(BaseLocation enemyMainBase){
+		
 		updateEnemyUnits();
-		isAttacking = true;
+		System.out.println("ATTACK");
+		//isAttacking = true;
 		enemyMain = enemyMainBase;
+		System.out.println(enemyBuildings);
 		if(enemyBuildings.size() < 1){
 			attack(BWTA.getRegion(enemyMainBase.getTilePosition()));
 		} else {
@@ -254,6 +262,7 @@ public class ArmyManager implements Manager {
 				if(!b.stillExists(game)){
 					enemyBuildings.remove(b);
 				} else {
+				
 					if(target == null){
 						target = b;
 					} else
@@ -263,7 +272,9 @@ public class ArmyManager implements Manager {
 				}
 			}
 		}
-		attack(BWTA.getRegion(target.position));
+		
+		attack(target.position);
+		//attack(BWTA.getRegion(target.position));
 	}
 	
 	/*public void attack(BaseLocation base){
@@ -363,7 +374,14 @@ public class ArmyManager implements Manager {
 
 	}
 	
-	
+	public void attack(TilePosition tile){
+		if(!isAttacking) {
+			oldStagingArea = stagingArea;
+		}
+		stagingArea = tile.toPosition();
+		targetRegion = BWTA.getRegion(tile);
+		isAttacking = true;
+	}
 	
 	public BaseLocation getTarget(){
 		return BWTA.getNearestBaseLocation(targetRegion.getCenter());

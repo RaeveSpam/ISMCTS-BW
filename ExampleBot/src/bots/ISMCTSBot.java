@@ -104,6 +104,10 @@ public class ISMCTSBot extends DefaultBWListener {
 		}
     	count--;
 
+    	// 25 minutes passed and sub 50 supply
+    	if(timeoutCount > 45000 && self.supplyUsed() > 100){
+    		game.leaveGame();
+    	}
     	// equivalent to 30 minutes 
     	if(timeoutCount > 54000){
     		game.leaveGame();

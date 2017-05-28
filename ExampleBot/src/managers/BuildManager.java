@@ -42,7 +42,7 @@ public class BuildManager implements Manager {
 		 
 	}
 	
-	private void countWorkers(){
+	private int countWorkers(){
 		List<Unit> units = game.self().getUnits();
 		numWorkers = 0;
 		for(Unit myUnit : units){
@@ -50,6 +50,7 @@ public class BuildManager implements Manager {
 				numWorkers++;
 			}
 		}
+		return numWorkers;
 	}
 	
 	private void manageWorkersAndBases(){
@@ -189,7 +190,9 @@ public class BuildManager implements Manager {
 				//System.out.println("Can afford " + ba.type + " " + canAfford(ba));
 				if(canAfford(ba)){
 					if(ba.isBuilding){
-						if(build((BuildBuilding)ba)){;
+						boolean startBuilding = build((BuildBuilding)ba);
+						System.out.println(startBuilding);
+						if(startBuilding){;
 							activeBuilds.add((BuildBuilding)buildQueue.pop());
 						} else {
 							cont = false;
