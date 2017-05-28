@@ -17,7 +17,7 @@ public enum Entity {
 		List<Entity> result = new ArrayList<Entity>();
 		result.add(Arbiter);
 		result.add(Arbiter_Tribunal);
-		result.add(Archon);
+		//result.add(Archon);
 		//result.add(Assimilator);
 		result.add(Carrier);
 		result.add(Citadel_of_Adun);
@@ -26,7 +26,7 @@ public enum Entity {
 		result.add(Fleet_Beacon);
 		result.add(Forge);
 		result.add(Gateway);
-		result.add(High_Templar);
+		//result.add(High_Templar);
 		//result.add(Interceptor);
 		//result.add(Nexus);
 		result.add(Observatory);
@@ -39,8 +39,8 @@ public enum Entity {
 		result.add(Robotics_Support_Bay);
 		//result.add(Scarab);
 		result.add(Scout);
-		result.add(Shield_Battery);
-		result.add(Shuttle);
+		//result.add(Shield_Battery);
+		//result.add(Shuttle);
 		result.add(Stargate);
 		result.add(Templar_Archives);
 		result.add(Zealot);

@@ -46,7 +46,7 @@ public class EnemyBuilding {
 		if(game.isVisible(position)){
 			// Is visible, check if still is on tile
 			for(Unit unit : game.getUnitsOnTile(position)){
-				if(ISMCTS.typeToEntity(unit.getType())  == type){
+				if(ISMCTS.typeToEntity(unit.getType())  == type && unit.getPlayer() == game.enemy()){
 					return true;
 				}
 			}

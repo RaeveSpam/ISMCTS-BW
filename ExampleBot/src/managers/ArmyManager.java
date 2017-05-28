@@ -244,6 +244,7 @@ public class ArmyManager implements Manager {
 	 * Simple Attack
 	 */
 	public void attack(BaseLocation enemyMainBase){
+		updateEnemyUnits();
 		isAttacking = true;
 		enemyMain = enemyMainBase;
 		if(enemyBuildings.size() < 1){
@@ -253,7 +254,10 @@ public class ArmyManager implements Manager {
 				if(!b.stillExists(game)){
 					enemyBuildings.remove(b);
 				} else {
-					if(target == null || ISMCTS.entityToType(b.type).mineralPrice() > ISMCTS.entityToType(target.type).mineralPrice()){
+					if(target == null){
+						target = b;
+					} else
+					if(ISMCTS.entityToType(b.type).mineralPrice() > ISMCTS.entityToType(target.type).mineralPrice()){
 						target = b;
 					}
 				}
