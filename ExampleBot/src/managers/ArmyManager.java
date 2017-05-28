@@ -250,8 +250,12 @@ public class ArmyManager implements Manager {
 			attack(BWTA.getRegion(enemyMainBase.getTilePosition()));
 		} else {
 			for(EnemyBuilding b : enemyBuildings){
-				if(target == null || ISMCTS.entityToType(b.type).mineralPrice() > ISMCTS.entityToType(target.type).mineralPrice()){
-					target = b;
+				if(!b.stillExists(game)){
+					enemyBuildings.remove(b);
+				} else {
+					if(target == null || ISMCTS.entityToType(b.type).mineralPrice() > ISMCTS.entityToType(target.type).mineralPrice()){
+						target = b;
+					}
 				}
 			}
 		}
