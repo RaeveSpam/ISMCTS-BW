@@ -75,7 +75,7 @@ public class ISMCTSBot extends DefaultBWListener {
     	buildManager.onFrame();
     	//System.out.println("*   Army  Manager   *");
     	armyManager.onFrame();
-    	updateEnemyUnits();
+    	//updateEnemyUnits();
     	
     	// ISMCTS
     	

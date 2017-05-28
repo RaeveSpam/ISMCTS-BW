@@ -196,9 +196,7 @@ public class ArmyManager implements Manager {
 	public void onFrame() {
 		// TODO Auto-generated method stub
 		if(count % 15 == 0){
-			if(isAttacking){
-				attack(enemyMain);
-			}
+			
 			ownedRegions = new ArrayList<Region>();
 			for(Unit u : game.self().getUnits()){
 				if(u.getType() == UnitType.Protoss_Nexus){
@@ -231,6 +229,9 @@ public class ArmyManager implements Manager {
 			}
 			if(count > 90){
 				count = 0;
+				if(isAttacking){
+					attack(enemyMain);
+				}
 			}
 		}
 		count++;
@@ -344,10 +345,12 @@ public class ArmyManager implements Manager {
 	
 	public void attack(Region reg){
 		//System.out.println("Attack 2");
-		isAttacking = true;
-		oldStagingArea = stagingArea;
+		if(!isAttacking) {
+			oldStagingArea = stagingArea;
+		}
 		stagingArea = reg.getCenter();
 		targetRegion = reg;
+		isAttacking = true;
 	//	System.out.println("Attack 3 " + isAttacking);	
 
 	}
